@@ -1,0 +1,4 @@
+body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+nav { margin-bottom: 1rem; }
+.flash { background: #e8f4ea; padding: .5rem; }
+form { display: grid; gap: .5rem; }
