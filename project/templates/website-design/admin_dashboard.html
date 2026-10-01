@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+    <title> SuperChats | Admin </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/styles.css">
+        <head>
+            <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+        </head>
+
+        <body class="dashboard-page">
+
+        <nav class="navbar bg-white border-bottom">
+        
+        <div class="container-fluid">
+            <div class="addMargin">
+            <a class="navbar-brand" href ="index.html">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png"> 
+            <span style = "margin-left: 26px;" class="badge bg-danger">Admin</span>
+        <br><br> 
+        </a>
+    
+        </div>
+
+        <a style = "margin-right: 26px;" href ="index.html" class="btn btn-outline-dark btn-sm">
+            
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+            </svg>
+
+        </a>
+
+            </div>
+
+        </nav>
+            
+
+        <div class="container-fluid px-4 py-4" style="max-width: 1200px;">
+
+            <h1 class="fontLook">Admin Dashboard</h1>
+        <p class = "description">Change or delete fundraising events and see flagged content</p>
+
+            <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
+                    <div class="col">
+
+                        <div class="card text-center p-3 h-100">
+
+                        <p class="number">4</p>
+                        <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Pending </p>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card text-center p-3 h-100">
+                        <p class="number">3</p>
+                    <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Active</p>
+                </div>
+            </div>
+
+            <div  class="col">
+
+                <div style = " border: 2px red solid;" class="card text-center p-3 h-100">
+                    <p style = "color:red" class="number">2</p>
+
+                    <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Flagged Items</p>
+
+            </div>
+        </div>
+
+
+                <div class="col">
+                    <div class="card text-center p-3 h-100">
+                        <p class="number">1</p>
+                            <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Users Pending</p>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div  style = " border: 3px green solid;"  class="card p-4 mb-4">
+                <h2 class="titleLook">Approval of Campaigns</h2>
+                <p style=" font-weight: 300; font-size: 1.5rem; " >Here is where you can approve and decline campaigns</p>
+
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+
+                    <div class="col">
+                        <div class="card h-100 p-3" style=" font-weight: 300; font-size: 1.3rem;">
+                            <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">Health Tech</h3>
+                            <div class="row p text-muted g-2 mb-3">
+
+                                <div class="col-6"><strong class="d-block text-dark">Creator</strong>MKBHD</div>
+                            <div class="col-6"><strong class="d-block text-dark">Category</strong>Tech</div>
+
+
+                        </div>
+                         <div class="d-flex gap-2 justify-content-between">
+                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                        <button class="btn btn-success btn-sm">Approve</button>
+
+                                
+                                    </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="card h-100 p-3"  style=" font-weight: 300; font-size: 1.3rem;">
+                        <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">Music Album</h3>
+                            <div class="row p text-muted g-2 mb-3">
+                            <div class="col-6"><strong class="d-block text-dark">Creator</strong>Drake</div>
+
+                            <div class="col-6"><strong class="d-block text-dark">Category</strong>Music</div>
+
+                        </div>
+                       <div class="d-flex gap-2 justify-content-between">
+                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                        <button class="btn btn-success btn-sm">Approve</button>
+
+                                
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                        <div class="card h-100 p-3" style=" font-weight: 300; font-size: 1.3rem;">
+
+                            <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">All-In Summit</h3>
+                            <div class="row p text-muted g-2 mb-3">
+                                <div class="col-6"><strong class="d-block text-dark">Creator</strong>All-In Podcast</div>
+
+                                    <div class="col-6"><strong class="d-block text-dark">Category</strong>Podcasts</div>
+
+                                </div>
+                                    <div class="d-flex gap-2 justify-content-between">
+                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                        <button class="btn btn-success btn-sm">Approve</button>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="card h-100 p-3" style=" font-weight: 300; font-size: 1.3rem;">
+                                    <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">Water Project</h3>
+                                    <div class="row p text-muted g-2 mb-3">
+                                        <div class="col-6"><strong class="d-block text-dark">Creator</strong>Niko Omilana</div>
+
+                                        <div class="col-6"><strong class="d-block text-dark">Category</strong>Podcasts</div>
+                                        
+                                    </div>
+                                         <div class="d-flex gap-2 justify-content-between">
+                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                        <button class="btn btn-success btn-sm">Approve</button>
+
+                                
+                                    </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                <div style = " border: 3px green solid;" class="card p-4 mb-4">
+                    <h2 class="titleLook">Campaign Management</h2>
+                <p style=" font-weight: 300; font-size: 1.5rem;">Edit and change campaign details</p>
+
+                    <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
+                    <div class="col">   
+                    <div class="card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h3 style=" font-weight: 300; font-size: 1.7rem;">The Water Project</h3>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="p text-muted mb-3">Niko Omilana - $2,600 raised</div>
+                    <div class="d-flex flex-wrap gap-2">
+                               <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                    
+                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
+                                    
+                            </div>
+                    </div>
+                </div>
+                <div class="col">
+                            <div class="card h-100 p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h3 style=" font-weight: 300; font-size: 1.7rem;">Album cover art</h3>
+                                    <span class="badge bg-warning text-dark">Paused</span>
+                                </div>
+                                <div class="p text-muted mb-3">Drake - $70,000 raised</div>
+                                <div class="d-flex flex-wrap gap-2">
+
+                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                    
+                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
+
+                                </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                            <div class="card h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h3 style=" font-weight: 300; font-size: 1.7rem;">India Fund</h3>
+                                    <span class="badge bg-secondary">Suspend</span>
+                                </div>
+                                <div class="p text-muted mb-3">Joe Fazer - $26 raised</div>
+                                
+                                    <div class="d-flex flex-wrap gap-2">
+
+                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                    
+                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+            <div style = " border: 3px green solid;" class="card p-4 mb-4">
+            <h2 class="titleLook">User Management</h2>
+                <p style=" font-weight: 300; font-size: 1.5rem;">Make sure users comply with your terms</p>
+
+                    <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
+                        <div class="col">
+                            <div class="card h-100 p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h3 style=" font-weight: 300; font-size: 1.7rem;">MKBHD</h3>
+
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            </div>  
+
+                                <div class="p text-muted mb-3">mkbhd@gmail.com - Creator</div>
+                                <div class="d-flex flex-wrap gap-2">
+
+                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                    <button class="btn btn-success btn-sm">Approve</button>
+                                    
+                                    <button class="btn btn-outline-secondary btn-sm">Edit</button>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="col">
+
+                    <div class="card h-100 p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+
+                            <h3 style=" font-weight: 300; font-size: 1.7rem;">Niko Omilana</h3>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+
+
+                        <div class="p text-muted mb-3">niko@gmail.com - Creator</div>
+
+
+                        <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-danger btn-sm">Delete</button>
+                                <button class="btn btn-success btn-sm">Approve</button>
+                                <button class="btn btn-outline-secondary btn-sm">Edit</button>
+                                    
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        <div style = " border: 3px red solid;" class="card p-4 mb-4">
+                <h2 class="titleLook">Flagged Content</h2>
+                <p style=" font-weight: 300; font-size: 1.5rem;">Review and remove red flagged content</p>
+
+            <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
+
+                <div class="col">
+                    <div class="card h-100 p-3">    
+                            <h3 style=" font-weight: 300; font-size: 1.7rem;">Comment on "Water Project"</h3>
+                            <div class="p mb-3"><strong>Crypto - Spam</strong></div>
+                        <div class="d-flex flex-wrap gap-2">
+
+                                <button class="btn btn-outline-secondary btn-sm">Ban</button>
+
+                                    <button class="btn btn-outline-danger btn-sm">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                    <div class="card h-100 p-3">
+                        <h3 style="font-weight: 300; font-size: 1.7rem;">Campaign description</h3>
+                        <div class="p mb-3"><strong>Tour Fund - Misleading fundraising goal</strong></div>
+                            <div class="d-flex flex-wrap gap-2">
+
+
+
+                            <button class="btn btn-outline-secondary btn-sm">Ban</button>
+
+                            <button class="btn btn-outline-danger btn-sm">Remove</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+
+            <div class="card p-3 p-md-5" style="border: 3px green solid">
+        <h2 class="titleLook">Featured Campaigns</h2>
+        <p style="font-weight: 300; font-size: 1.5rem;">Showcase the very best on the home page for all to see</p>
+
+    <form>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3" style="font-weight: 300; font-size: 1.3rem;">
+
+            <div class="col">
+                <div class="card p-3 p-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" checked>
+                            
+                            <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">Drake</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card p-3 p-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked>
+                        <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">All-in Podcast</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card p-3 p-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox">
+                        <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">Emma Raducanu</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card p-3 p-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked>
+                        <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">MKBHD</label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <button type="submit" class="btn btn-success">Save</button>
+    </form>
+</div>
+    </body>
+
+</html>
