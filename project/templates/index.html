@@ -1,5 +1,19 @@
 {% extends 'base.html' %}
+
+{% block title %}Campaigns{% endblock %}
+
 {% block content %}
-<h1>Items</h1>
-<ul>{% for i in items %}<li><strong>{{ i.name }}</strong> — {{ i.description }}</li>{% endfor %}</ul>
+
+<h1>Campaigns</h1>
+
+<ul>
+    {% for campaign in campaigns %}
+        <li>
+            <strong>{{ campaign.title }}</strong>
+            - Goal: ${{ campaign.goalAmount }}
+            - Status: {{ campaign.status }}
+        </li>
+    {% endfor %}
+</ul>
+
 {% endblock %}
