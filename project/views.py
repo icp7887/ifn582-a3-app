@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from .forms import ItemForm
 from . import models
 
@@ -16,3 +16,7 @@ def add():
         flash('Item added.')
         return redirect(url_for('main.index'))
     return render_template('add.html', form=form)
+@bp.route('/search')
+def search():
+    search = request.args.get('search')
+    return f"You searched for: {search}"
