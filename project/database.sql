@@ -1,6 +1,7 @@
 #DDL Queries
-create database if not exists superchat; #create database if it's not created already
-use superchat; #use database
+drop database if exists superchat;
+create database superchat;
+use superchat;
 
 #user table
 create table user(
@@ -52,18 +53,17 @@ create table customer(
 );
 
 create table campaign(
-	id int not null auto_increment,
-    title varchar(100) not null,
+	id int auto_increment primary key,
+    title varchar(150) not null,
     goalAmount decimal(10,2) default 0.00,
-    status varchar(50) not null default 'pending',
-    campaignImage varchar(100) not null,
-    startDate DATETIME default current_timestamp,
-    endDate DATETIME default current_timestamp,
+    status varchar(30) not null default 'pending',
+    campaignImage varchar(255),
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
     isFeatured Boolean default false,
     isFlagged Boolean default false,
     creatorID int not null,
     category varchar(50) not null,
-    primary key(id),
     foreign key(creatorID) references creator(id) on delete cascade on update cascade
 );
 
@@ -81,12 +81,11 @@ create table donation(
 );
 
 create table campaign_post(
-	id int not null auto_increment,
+	id int primary key auto_increment,
     campaignID int not null,
-    title varchar(100) not null,
-    content TEXT,
-    postDate DATETIME default current_timestamp,
-    primary key(id),
+    title varchar(150) not null,
+    content TEXT not null,
+    postDate DATE NOT NULL,
     foreign key(campaignID) references campaign(id) on delete cascade on update cascade
 );
 
@@ -166,3 +165,20 @@ INSERT INTO campaign_post (id, campaignID, title, content, postDate) VALUES
 	(3, 3, 'All-in Summit Update', 'Planning and preparation for the All-in Summit have begun.', '2027-01-17 00:00:00');
     
 UPDATE user SET passwordHASH = 'adminpassword123' WHERE id = 12;
+
+ALTER TABLE user CHANGE COLUMN passwordHASH password VARCHAR(250);
+
+UPDATE user SET password = 'lara123' WHERE id = 1;
+UPDATE user SET password = 'jade123' WHERE id = 2;
+UPDATE user SET password = 'emma123' WHERE id = 3;
+UPDATE user SET password = 'tessa123' WHERE id = 4;
+UPDATE user SET password = 'maya123' WHERE id = 5;
+UPDATE user SET password = 'drake123' WHERE id = 6;
+UPDATE user SET password = 'allin123' WHERE id = 7;
+UPDATE user SET password = 'mkbhd123' WHERE id = 8;
+UPDATE user SET password = 'mrbeast123' WHERE id = 9;
+UPDATE user SET password = 'niko123' WHERE id = 10;
+UPDATE user SET password = 'isaac123' WHERE id = 11;
+UPDATE user SET password = 'daniel123' WHERE id = 13;
+UPDATE user SET password = 'jacob123' WHERE id = 14;
+UPDATE user SET password = 'shem123' WHERE id = 15;

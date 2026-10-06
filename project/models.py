@@ -51,7 +51,7 @@ def get_user_by_email(email):
         SELECT 
             u.id, 
             u.username, 
-            u.passwordHASH, 
+            u.password, 
             u.email, 
             a.accessLevel AS role
         FROM user u

@@ -3,11 +3,13 @@ from . import models
 
 bp = Blueprint('main', __name__)
 
-@bp.route('/admin-dashboard-test') #test route to verify that the admin dashboard fetch functions are working without front-end
+#this is just a test route, delete later. It is used to verify that the admin dashboard fetch functions are working without the front-end.#
+@bp.route('/admin-dashboard-test') 
 def admin_dashboard_test():
     pending = models.get_pending_campaigns()
     featured = models.get_featured_campaigns()
     return {"pending": pending, "featured": featured}
+#########################################################################################################
 
 #admin dashboard url route
 @bp.route('/admin-dashboard')
@@ -65,7 +67,7 @@ def login():
         #note for team meeting - ask wether we should implement password hashing or use plain-text for demo purposes. If we implement password hashing, we will need to modify the login function to check the hashed password instead of plain-text. This would involve using a library like bcrypt or werkzeug.security to hash the password when creating a user and then verifying the hash during login.
 
         # Check plain-text password against passwordHASH column
-        if user and user.get('passwordHASH') == password:
+        if user and user.get('password') == password:
             session['user_id'] = user['id']
             session['username'] = user['username']
             # Fallback to 'User' if the account is not in the admin table
@@ -82,7 +84,7 @@ def login():
         else:
             return {"error": "Invalid email or password"}, 401 # HTTP status code 401 indicates that the request has not been applied because it lacks valid authentication credentials for the target resource. In this case, it informs the client that the provided email or password is incorrect, preventing unauthorized access.
     
-    # If the request method is GET, render the login page. If rendering fails (e.g., template not found), return a simple HTML form as a fallback.
+    # If the request method is GET, render the login page. If rendering fails (e.g., template not found), return a simple HTML form as a fallback. change if necessary to match front-end framework. This is a temporary solution for testing purposes and should be replaced with proper error handling and user feedback in a production environment.
     try:
         return render_template('login.html')
     except:
