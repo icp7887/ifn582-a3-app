@@ -18,5 +18,8 @@ def add():
     return render_template('add.html', form=form)
 @bp.route('/search')
 def search():
-    search = request.args.get('search')
+    search = request.args.get('search').strip()
+    if not search:
+        return "Please enter something to search."
     return f"You searched for: {search}"
+    return str(results)
