@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from .forms import ItemForm
-=======
-from flask import Blueprint, render_template, redirect, url_for, session, request
->>>>>>> origin/main
 from . import models
 
 bp = Blueprint('main', __name__)
@@ -16,7 +12,6 @@ def admin_dashboard_test():
     return {"pending": pending, "featured": featured}
 #########################################################################################################
 
-<<<<<<< HEAD
 @bp.route('/add', methods=['GET', 'POST'])
 def add():
     form = ItemForm()
@@ -25,14 +20,15 @@ def add():
         flash('Item added.')
         return redirect(url_for('main.index'))
     return render_template('add.html', form=form)
+#search funtionality
 @bp.route('/search')
 def search():
     search = request.args.get('search').strip()
     if not search:
         return "Please enter something to search."
-    return f"You searched for: {search}"
+    results = models.search_campaigns(search)
     return str(results)
-=======
+
 #admin dashboard url route
 @bp.route('/admin-dashboard')
 def admin_dashboard():
@@ -126,4 +122,3 @@ def login():
 def logout():
     session.clear()  # Clear all session data
     return {"message": "Logged out successfully"}, 200
->>>>>>> origin/main

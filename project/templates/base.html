@@ -1,12 +1,27 @@
 <!doctype html>
 <html>
 <head>
-  <title>{% block title %}App{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>{% block title %}Fundraising App{% endblock %}</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
-  <nav><a href="{{ url_for('main.index') }}">Home</a> | <a href="{{ url_for('main.add') }}">Add</a></nav>
-  {% with msgs = get_flashed_messages() %}{% for m in msgs %}<p class="flash">{{ m }}</p>{% endfor %}{% endwith %}
-  <main>{% block content %}{% endblock %}</main>
+
+    <nav>
+        <a href="{{ url_for('main.index') }}">Home</a>
+    </nav>
+
+    {% with msgs = get_flashed_messages() %}
+        {% for m in msgs %}
+            <p class="flash">{{ m }}</p>
+        {% endfor %}
+    {% endwith %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
 </body>
 </html>
