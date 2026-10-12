@@ -20,6 +20,16 @@ def search_campaigns(search):
     cur.close()
     return results
 
+def get_campaigns_by_category(category):
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "SELECT * FROM campaign WHERE category = %s",
+        (category,)
+    )
+    results = cur.fetchall()
+    cur.close()
+    return results
+
 def get_campaign_by_id(campaign_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM Campaign WHERE id = %s", (campaign_id,))
@@ -121,3 +131,10 @@ def get_user_by_id(user_id):
     user = cur.fetchone()
     cur.close()
     return user
+
+def get_categories():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT DISTINCT category FROM campaign ORDER BY category")
+    results = cur.fetchall()
+    cur.close()
+    return results

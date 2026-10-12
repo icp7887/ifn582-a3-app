@@ -11,10 +11,8 @@
     <title>Superchat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
-          crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
@@ -27,7 +25,8 @@
             <div class="addMargin">
 
                 <a class="navbar-brand" href="/">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
                     <br><br>
                 </a>
 
@@ -36,12 +35,9 @@
             <input type="checkbox" id="navToggle" class="nav-toggle-checkbox">
 
             <label for="navToggle" class="nav-toggle-btn">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     width="16"
-                     height="16"
-                     fill="currentColor"
-                     viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
                 </svg>
             </label>
 
@@ -51,17 +47,13 @@
                 <div class="textMargin">
                     <form class="form-inline">
                         <div class="inline">
-                            <input type="search"
-                                   class="form-control mr-sm-2 searchBar"
-                                   placeholder="Find creators">
+                            <input type="search" class="form-control mr-sm-2 searchBar" placeholder="Find creators">
 
                             <button class="btn btn-outline-light my-2 my-sm-0">
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                     width="16"
-                                     height="16"
-                                     fill="currentColor"
-                                     viewBox="0 0 16 16">
-                                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 1 1.415-1.414l-3.85-3.85a1 1 0 0 1-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 1 1.415-1.414l-3.85-3.85a1 1 0 0 1-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
                                 </svg>
                             </button>
                         </div>
@@ -73,9 +65,8 @@
 
 
     <header class="front">
-        <img class="frontImg"
-             style="transform: scaleX(-1);"
-             src="https://mrbeast.store/cdn/shop/files/Hero-Desktop.png?v=1762185908&width=3840">
+        <img class="frontImg" style="transform: scaleX(-1);"
+            src="https://mrbeast.store/cdn/shop/files/Hero-Desktop.png?v=1762185908&width=3840">
 
         <div class="frontOverlay">
             <div class="frontContent">
@@ -119,10 +110,13 @@
 
     <div class="container-fluid">
         <div class="row row-cols-2 row-cols-md-4 g-3">
-            <div class="col"><a class="cats">Music</a></div>
-            <div class="col"><a class="cats">Podcasts</a></div>
-            <div class="col"><a class="cats">Tech</a></div>
-            <div class="col"><a class="cats">Sports</a></div>
+            {% for category in categories %}
+            <div class="col">
+                <a class="cats" href="{{ url_for('main.category', category=category.category) }}">
+                    {{ category.category }}
+                </a>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
@@ -134,19 +128,19 @@
     <div class="container-fluid py-5">
 
         <h2 class="text-center">
-        {% if request.args.get('search') %}
-        Search Results for "{{ request.args.get('search') }}"
-        {% else %}
-        Campaigns
-         {% endif %}
+            {% if request.args.get('search') %}
+            Search Results for "{{ request.args.get('search') }}"
+            {% else %}
+            Campaigns
+            {% endif %}
         </h2>
 
         <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% if not campaigns %}
-        <p class="text-center text-white">
-        No campaigns found.
-         </p>
-        {% endif %}
+            {% if not campaigns %}
+            <p class="text-center text-white">
+                No campaigns found.
+            </p>
+            {% endif %}
             {% for campaign in campaigns %}
 
             <div class="col">
@@ -207,7 +201,7 @@
                         </div>
 
                         <img src="https://upload.wikimedia.org/wikipedia/en/4/46/Drake_-_Toosie_Slide.png"
-                             class="card-img-top">
+                            class="card-img-top">
 
                         <div class="card-body">
                             Music
@@ -226,7 +220,7 @@
                         </div>
 
                         <img src="https://cdn.prod.website-files.com/633cd7641794e536812c0e29/66dd7f9c930b82790d33fefc_Copy_of_All-In_Logos_3_600x.png"
-                             class="card-img-top">
+                            class="card-img-top">
 
                         <div class="card-body">
                             Podcasts
@@ -244,8 +238,7 @@
                             <p class="card-text">More reviews on latest technology</p>
                         </div>
 
-                        <img src="https://i.ytimg.com/vi/idEAABFzpfg/maxresdefault.jpg"
-                             class="card-img-top">
+                        <img src="https://i.ytimg.com/vi/idEAABFzpfg/maxresdefault.jpg" class="card-img-top">
 
                         <div class="card-body">
                             Tech
@@ -270,8 +263,7 @@
                 <br>
 
                 <button class="btn btn-light btn-lg">
-                    <a style="text-decoration: none; color: black"
-                       href="/donation.html">
+                    <a style="text-decoration: none; color: black" href="/donation.html">
                         Subscribe
                     </a>
                 </button>
@@ -298,20 +290,18 @@
 
                     <h5>Superchats</h5>
 
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
 
                     <p class="mt-3">
                         Experience the very best crowdfunding design for content creators and fans
                     </p>
 
                     <a>
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                             width="16"
-                             height="16"
-                             fill="currentColor"
-                             class="bi bi-youtube"
-                             viewBox="0 0 16 16">
-                            <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-youtube" viewBox="0 0 16 16">
+                            <path
+                                d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z" />
                         </svg>
                     </a>
 
