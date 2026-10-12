@@ -4,6 +4,11 @@ from . import models
 
 bp = Blueprint('main', __name__)
 
+@bp.route('/')
+def index():
+    campaigns = models.get_all_campaigns()
+    return render_template('index.html', campaigns=campaigns)
+
 #this is just a test route, delete later. It is used to verify that the admin dashboard fetch functions are working without the front-end.#
 @bp.route('/admin-dashboard-test') 
 def admin_dashboard_test():
@@ -27,7 +32,7 @@ def search():
     if not search:
         return "Please enter something to search."
     results = models.search_campaigns(search)
-    return str(results)
+    return render_template('index.html', campaigns=results)
 
 #admin dashboard url route
 @bp.route('/admin-dashboard')

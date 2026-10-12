@@ -133,20 +133,25 @@
     <!-- DATABASE CAMPAIGNS -->
     <div class="container-fluid py-5">
 
-        <h2 class="text-center">Campaigns</h2>
+        <h2 class="text-center">
+        {% if request.args.get('search') %}
+        Search Results for "{{ request.args.get('search') }}"
+        {% else %}
+        Campaigns
+         {% endif %}
+        </h2>
 
         <div class="row row-cols-1 row-cols-md-3 g-4">
-
+        {% if not campaigns %}
+        <p class="text-center text-white">
+        No campaigns found.
+         </p>
+        {% endif %}
             {% for campaign in campaigns %}
 
             <div class="col">
-                <div class="card h-100">
+                <div class="card h-100 text-dark">
 
-                    {% if campaign.campaignImage %}
-                        <img src="{{ url_for('static', filename='img/' + campaign.campaignImage) }}"
-                             class="card-img-top"
-                             alt="{{ campaign.title }}">
-                    {% endif %}
 
                     <div class="card-body">
 

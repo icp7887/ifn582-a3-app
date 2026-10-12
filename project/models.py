@@ -10,6 +10,15 @@ def get_all_campaigns():
     cur.close()
     return rows
 
+def search_campaigns(search):
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "SELECT * FROM campaign WHERE title LIKE %s",
+        ('%' + search + '%',)
+    )
+    results = cur.fetchall()
+    cur.close()
+    return results
 
 def get_campaign_by_id(campaign_id):
     cur = mysql.connection.cursor()
