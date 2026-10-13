@@ -1,6 +1,5 @@
 from . import mysql
 
-
 # CAMPAIGN FETCH FUNCTIONS
 
 def get_all_campaigns():
@@ -10,14 +9,12 @@ def get_all_campaigns():
     cur.close()
     return rows
 
-
 def get_campaign_by_id(campaign_id):
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM Campaign WHERE id = %s", (campaign_id,))
     row = cur.fetchone()
     cur.close()
     return row
-
 
 # ADMIN FETCH FUNCTIONS
 
@@ -29,7 +26,6 @@ def get_pending_campaigns():
     cur.close()
     return rows
 
-
 def get_featured_campaigns():
     # Fetch all campaigns with isFeatured set to TRUE
     cur = mysql.connection.cursor()
@@ -38,7 +34,6 @@ def get_featured_campaigns():
     cur.close()
     return rows
 
-
 def get_flagged_campaigns():
     # Fetch all campaigns with isFlagged set to TRUE
     cur = mysql.connection.cursor()
@@ -46,7 +41,6 @@ def get_flagged_campaigns():
     rows = cur.fetchall()
     cur.close()
     return rows
-
 
 # ADMIN ACTION FUNCTIONS
 
@@ -60,7 +54,6 @@ def update_campaign_status(campaign_id, new_status):
     mysql.connection.commit()
     cur.close()
 
-
 def set_campaign_featured(campaign_id, is_featured):
     # Update campaign featured status to True or False
     cur = mysql.connection.cursor()
@@ -70,7 +63,6 @@ def set_campaign_featured(campaign_id, is_featured):
     )
     mysql.connection.commit()
     cur.close()
-
 
 def set_campaign_flagged(campaign_id, is_flagged):
     # Update campaign flagged status to True or False
@@ -82,17 +74,16 @@ def set_campaign_flagged(campaign_id, is_flagged):
     mysql.connection.commit()
     cur.close()
 
-
 # USER FETCH FUNCTIONS
 
 def get_user_by_email(email):
     cur = mysql.connection.cursor()
     cur.execute("""
-        SELECT 
-            u.id, 
-            u.username, 
-            u.password, 
-            u.email, 
+        SELECT
+            u.id,
+            u.username,
+            u.passwordHASH AS password,
+            u.email,
             a.accessLevel AS role
         FROM user u
         LEFT JOIN admin a ON u.id = a.id
@@ -101,7 +92,6 @@ def get_user_by_email(email):
     user = cur.fetchone()
     cur.close()
     return user
-
 
 def get_user_by_id(user_id):
     cur = mysql.connection.cursor()

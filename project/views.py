@@ -1,3 +1,4 @@
+from werkzeug.security import check_password_hash
 from flask import Blueprint, render_template, redirect, url_for, session, request
 from . import models
 
@@ -91,7 +92,12 @@ def login():
         # Password hashing still needs to be handled properly.
         # The assignment requires hashed passwords.
 
-        if user and user.get('password') == password:
+        if (
+    user
+    and user.get('password')
+    and password
+    and check_password_hash(user['password'], password)
+        ):
 
             session['user_id'] = user['id']
             session['username'] = user['username']
