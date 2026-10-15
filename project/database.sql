@@ -173,21 +173,21 @@ CREATE TABLE campaign_post (
 INSERT INTO user
 (id, username, passwordHASH, email, dateJoined)
 VALUES
-(1, 'Lara', 'scrypt:32768:8:1$UDRZD894ICUpo4Gt$0d841d454fdb36ebbbc19c627dbc3530d86f5130a94e5f1449f29536ee10d45bb6f6393b067f8a7d47e77ba973c58a920a15b4f1e3b77002a5521cf4a6b689b1', 'lara@email.com', '2027-01-01 00:00:00'),
-(2, 'Jade', 'scrypt:32768:8:1$sq2erBkd0OrVF9tf$cf78f801d013e5e1c6c6f5964e68089a54d65b4ca2cdd8c749fdfc427084816f14fdfdd3f7aee9bca585a7e1ec99b295f5aed92b66013f6914af79143fb1bb95', 'jade@email.com', '2027-01-02 00:00:00'),
-(3, 'Emma', 'scrypt:32768:8:1$ywkBTvxxYA37Jz3M$7d022aeb11bc44b3b88988c1941591bf4a3ae1e09c85e0a40734fb59edb1c6dc4c74fb9a0b68e7c6f27f81558a2cc01022254e6073178e5daa7e4d57f55e4fb6', 'emma@email.com', '2027-01-02 00:00:00'),
-(4, 'Tessa', 'scrypt:32768:8:1$mNrufumEgW2Dn4ZQ$2ebf21477e785141c80853043fe4ca2dde2c6e4c4e6dcd2e507fb2c8a4d97bcc327539b0b08ee43cac8f4871c5582401addd65f2f3e87c757ecc812be358a844', 'tessa@email.com', '2027-01-03 00:00:00'),
-(5, 'Maya', 'scrypt:32768:8:1$iGV3QOcSxLJ32cGF$520591deab4532661a5d4ea6846108296006300a2e0def07ac6477d008b56ea70ba0b068676c954d3fca08c2865e2caf8bb1786f4c465fb74a088aee22572eb5', 'maya@email.com', '2027-01-04 00:00:00'),
-(6, 'Drake', 'scrypt:32768:8:1$2xmUgecvYPHANOb5$0a3a6a6be33dbca24eec111dade91eca444c2dc96f6fbf428e8c1eda8bc77a147540db64913244ac5ed5dbbf4523400bae2127f2808d340811b5087a60dfd22e', 'aubrey@ovo.com', '2027-01-07 00:00:00'),
-(7, 'All-In', 'scrypt:32768:8:1$zD6ekamfkqMBmuSu$979351e43656ddf475372db7ce8c139c19b7b65f3b6648362c096378b320190c5cda72f485447f93675b7f71e1cd0a8c81b783995a21a91beed955892e8f1f81', 'chamath@allin.com', '2027-01-07 00:00:00'),
-(8, 'MKBHD', 'scrypt:32768:8:1$hL3Z0DtEnswXNFHO$287ad3b419a993f7a291b5e2e85c6405a6ac9f8852e10b8e46693eaa347e9bc3183265be75f818c6cf016fb25fb584bfd83a1e474f020489d9ff86ed511029b3', 'mark@mkbhd.com', '2027-01-07 00:00:00'),
-(9, 'MrBeast', 'scrypt:32768:8:1$nm7AwvCP8w5aVWC0$46413137046ab811ace29f21429c8124c8a316b244def9d18eb25fa5efd7a09f1f8c93f61e35e6ff51c5eefe4bb65d3b99d4dea7921414902ef5078b7fe95f98', 'jimmy@mrbeast.com', '2027-01-07 00:00:00'),
-(10, 'Niko', 'scrypt:32768:8:1$u3QycqtjEoZB2tSe$b995ccd2da9955535f2c0339c3e7658469fe8c725c6c95b5f371cbef797a1c41e84d4a4c0d7a3481cd0d62dee9c925d2074c77b8a9749f1f9cc1dbdb0916269e', 'niko@betasquad.com', '2027-01-07 00:00:00'),
-(11, 'Isaac', 'scrypt:32768:8:1$gGTR87oCaWahotTl$c283dc5b64704ac0c06491da51393f3a2ed52a8a72ccd780d52262d3f2b2cea6c358ab9762150c6554801bea708f70e000423cd93d7adfc90acb1cbecef3d81c', 'isaac@superchats.com', '2027-01-01 00:00:00'),
-(12, 'Ido', 'scrypt:32768:8:1$6RkpNvTImvInXOos$28ada982df3d10555240cad7d4dc3575efb8ee4cd615fa75180a3e90c0bad778794c18890937a1146acc8a01e8c6170406d1f0618a5e1680df63d3dd10432f97', 'ido@superchats.com', '2027-01-01 00:00:00'),
-(13, 'Daniel', 'scrypt:32768:8:1$Brn9K02qnFYkmpPF$f8c2123a965335528c784c569202ad04cde1adf38833524362c9012622f10c62a36879800c240805cbb9c744babae28459fe6b7c04b539f90f6f866a62ceb201', 'daniel@superchats.com', '2027-01-01 00:00:00'),
-(14, 'Jacob', 'scrypt:32768:8:1$uQ6NkS9bReLgKcrP$417567c479b52c21e38fedd99852a7f0accbf563e91ba7caef53ba4243ef0207050adbed00a5d6ffc3915f6ff26d6901bad25f9244eb9bb58aa55c758f6c16f8', 'jacob@superchats.com', '2027-01-01 00:00:00'),
-(15, 'Shem', 'scrypt:32768:8:1$8mARwCP81NM748Rf$87e0ba1826b5f9e44aaca688574c22c27918c97c30df885be7c0ef457a0734032416c95c6f2e884a26ee1ed7971d15748037aca8d97448cb137fca7595b0ae38', 'shem@superchats.com', '2027-01-01 00:00:00');
+(1, 'Lara', '$2b$12$K9...', 'lara@email.com', '2027-01-01 00:00:00'),
+(2, 'Jade', '$2b$12$R7...', 'jade@email.com', '2027-01-02 00:00:00'),
+(3, 'Emma', '$2b$12$P2...', 'emma@email.com', '2027-01-02 00:00:00'),
+(4, 'Tessa', '$2b$12$Y1...', 'tessa@email.com', '2027-01-03 00:00:00'),
+(5, 'Maya', '$2b$12$X5...', 'maya@email.com', '2027-01-04 00:00:00'),
+(6, 'Drake', '$2b$12$L2...', 'aubrey@ovo.com', '2027-01-07 00:00:00'),
+(7, 'All-In', '$2b$12$Z2...', 'chamath@allin.com', '2027-01-07 00:00:00'),
+(8, 'MKBHD', '$2b$12$L2...', 'mark@mkbhd.com', '2027-01-07 00:00:00'),
+(9, 'MrBeast', '$2b$13$L2...', 'jimmy@mrbeast.com', '2027-01-07 00:00:00'),
+(10, 'Niko', '$2b$07$Z2...', 'niko@betasquad.com', '2027-01-07 00:00:00'),
+(11, 'Isaac', '$2b$12$L2...', 'isaac@superchats.com', '2027-01-01 00:00:00'),
+(12, 'Ido', '$2b$12$L2...', 'ido@superchats.com', '2027-01-01 00:00:00'),
+(13, 'Daniel', '$2b$12$L2...', 'daniel@superchats.com', '2027-01-01 00:00:00'),
+(14, 'Jacob', '$2b$12$L2...', 'jacob@superchats.com', '2027-01-01 00:00:00'),
+(15, 'Shem', '$2b$12$L2...', 'shem@superchats.com', '2027-01-01 00:00:00');
 
 
 # ------------------------------------------------------------
@@ -264,7 +264,7 @@ VALUES
  '2027-01-07', '2027-02-07', TRUE, FALSE, 7, 'Technology'),
 
 (4, 'VR Glasses', 3000.00, 'Pending', 'vr.png',
- '2027-01-07', '2027-02-07', FALSE, FALSE, 8, 'Technology'),
+ '2027-01-07', '2027-02-07', FALSE, TRUE, 8, 'Technology'),
 
 (5, 'India Fund', 2000.00, 'Pending', 'india.png',
  '2027-01-07', '2027-02-07', FALSE, TRUE, 9, 'Community'),
