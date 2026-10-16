@@ -54,11 +54,9 @@
                     </form>
                 </div>
             </div>
-            {% include '_auth_nav.html' %}
+
         </div>
     </nav>
-
-    {% include '_flashes.html' %}
 
 
     <header class="front">
@@ -104,7 +102,7 @@
     <br><br>
 
 
-    <!-- Existing featured section -->
+
     <div style="background-color: #111111;">
 
         <div class="container-fluid pt-0 pb-5 text-center">
@@ -114,7 +112,7 @@
             <h1 class="mx-auto container-fluid boldLook">
                 Today's Top Featured
             </h1>
-            <!-- Featured campaigns are chosen on the admin dashboard -->
+
             <br><br>
 
             <div class="row row-cols-1 row-cols-md-3 row-cols-lg-3 g-4">
@@ -167,7 +165,7 @@
 
     <br><br><br>
 
-        <!-- DATABASE CAMPAIGNS (active only) -->
+    
     <div id="campaigns" class="container-fluid pb-5">
 
         <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4 px-1">
@@ -225,7 +223,7 @@
             {% endfor %}
         </div>
 
-        {% if total_campaigns > limit %}
+        
         <div class="text-center mt-5">
             {% if show_all %}
             <a class="btn btn-outline-light btn-lg px-5"
@@ -235,7 +233,7 @@
                 href="{{ url_for('main.index', search=search or None, category=selected_category or None, show='all', _anchor='campaigns') }}">SHOW ALL ({{ total_campaigns }})</a>
             {% endif %}
         </div>
-        {% endif %}
+
 
     </div>
 
