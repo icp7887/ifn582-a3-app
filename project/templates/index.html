@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<!-- Existing Superchat homepage -->
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -24,7 +24,7 @@
         <div class="container-fluid">
             <div class="addMargin">
 
-                <a class="navbar-brand" href="/">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">
                     <img
                         src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
                     <br><br>
@@ -45,24 +45,27 @@
                 <label for="navToggle" class="phoneView-close">x</label>
 
                 <div class="textMargin">
-                    <form class="form-inline" action="{{ url_for('main.search') }}" method="GET">
+                    <form class="form-inline" method="get" action="{{ url_for('main.index') }}#campaigns" role="search">
                         <div class="inline">
-                            <input type="search" name="search" class="form-control mr-sm-2 searchBar"
-                                placeholder="Search campaigns">
+                            <input type="search" name="search" value="{{ search }}" class="form-control mr-sm-2 searchBar"
+                                placeholder="Find creators or campaigns" aria-label="Search campaigns">
 
-                            <button class="btn btn-outline-light my-2 my-sm-0">
+                            <button type="submit" class="btn btn-outline-light my-2 my-sm-0" aria-label="Search">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                     viewBox="0 0 16 16">
                                     <path
-                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 1 1.415-1.414l-3.85-3.85a1 1 0 0 1-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
                                 </svg>
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
+            {% include '_auth_nav.html' %}
         </div>
     </nav>
+
+    {% include '_flashes.html' %}
 
 
     <header class="front">
@@ -73,7 +76,7 @@
             <div class="frontContent">
                 <h2 class="fontLook">Support Creators</h2>
                 <p style="font-size:1.26rem;">Mr Beast Philanthropy</p>
-                <a href="/donation.html" class="btn btn-light btn-lg">Explore</a>
+                <a href="{{ url_for('main.donation') }}" class="btn btn-light btn-lg">Explore</a>
             </div>
         </div>
     </header>
@@ -105,77 +108,7 @@
     </div>
 
 
-    <br><br><br>
-
-    <h3 class="sTitle titleLook">Categories Available</h3>
-
-    <div class="container-fluid">
-        <div class="row row-cols-2 row-cols-md-4 g-3">
-            {% for category in categories %}
-            <div class="col">
-                <a class="cats" href="{{ url_for('main.category', category=category.category) }}">
-                    {{ category.category }}
-                </a>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-
-    <br><br><br><br>
-
-
-    <!-- DATABASE CAMPAIGNS -->
-    <div class="container-fluid py-5">
-
-        <h2 class="text-center">
-            {% if request.args.get('search') %}
-            Search Results for "{{ request.args.get('search') }}"
-            {% else %}
-            Campaigns
-            {% endif %}
-        </h2>
-
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            {% if not campaigns %}
-            <p class="text-center text-white">
-                No campaigns found.
-            </p>
-            {% endif %}
-            {% for campaign in campaigns %}
-
-            <div class="col">
-                <div class="card h-100 text-dark">
-
-
-                    <div class="card-body">
-
-                        <h5 class="card-title">
-                            {{ campaign.title }}
-                        </h5>
-
-                        <p class="card-text">
-                            Goal: ${{ campaign.goalAmount }}
-                        </p>
-
-                        <p class="card-text">
-                            Status: {{ campaign.status }}
-                        </p>
-
-                        <p class="card-text">
-                            Category: {{ campaign.category }}
-                        </p>
-
-                    </div>
-
-                </div>
-            </div>
-
-            {% endfor %}
-
-        </div>
-
-    </div>
+    <br><br>
 
 
     <!-- Existing featured section -->
@@ -188,91 +121,233 @@
             <h1 class="mx-auto container-fluid boldLook">
                 Today's Top Featured
             </h1>
-
+            <!-- Featured campaigns are chosen on the admin dashboard -->
             <br><br>
 
-            <div class="row row-cols-1 row-cols-md-3 g-4">
-
-                {% for campaign in featured_campaigns %}
-
+            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-3 g-4">
+                {% for f in featured %}
+                {% set fimg = f.creatorImage or f.campaignImage or '' %}
                 <div class="col">
-                    <div class="card creator-card h-100">
+                    <a class="card creator-card text-decoration-none text-white"
+                        href="{{ url_for('main.campaign_detail', campaign_id=f.id) }}">
 
                         <div class="card-body">
-                            <h5 class="card-title">
-                                <a href="{{ url_for('main.campaign_donation', campaign_id=campaign.id) }}">
-                                    {{ campaign.title }}
-                                </a>
-                            </h5>
-
-                            <p class="card-text">
-                                Goal: ${{ campaign.goalAmount }}
-                            </p>
-
-                            <p class="card-text">
-                                Category: {{ campaign.category }}
-                            </p>
+                            <h5 class="card-title">{{ f.creatorName }}</h5>
+                            <p class="card-text">{{ f.creatorTagline or f.title }}</p>
                         </div>
 
-                    </div>
+                        <img src="{{ fimg if fimg.startswith('http') else url_for('static', filename='img/' ~ fimg) }}"
+                            class="card-img-top" alt="{{ f.creatorName }}">
+
+                        <div class="card-body">
+                            {{ f.category }} &middot; {{ f.title }}
+                        </div>
+
+                    </a>
                 </div>
-
+                {% else %}
+                <p class="text-white-50">No featured campaigns right now.</p>
                 {% endfor %}
-
             </div>
 
         </div>
 
+
+    <br><br><br>
+
+    <h3 id="categories" class="sTitle titleLook">Categories Available</h3>
+
+    <div class="container-fluid">
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            <div class="col">
+                <a class="cats {% if not selected_category and not search %}active{% endif %}"
+                    href="{{ url_for('main.index', _anchor='categories') }}">All</a>
+            </div>
+            {% for c in categories %}
+            <div class="col">
+                <a class="cats {% if c.category == selected_category %}active{% endif %}"
+                    href="{{ url_for('main.index', category=c.category, _anchor='categories') }}">{{ c.category }}</a>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 
+    <br><br><br>
 
-    <div class="mx-auto container-fluid text-center">
+        <!-- DATABASE CAMPAIGNS (active only) -->
+    <div id="campaigns" class="container-fluid pb-5">
 
-        <div class="borderTag">
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-4 px-1">
+            <h3 class="titleLook mb-0">
+                {% if search %}
+                Results for "{{ search }}"
+                {% elif selected_category %}
+                {{ selected_category }} Campaigns
+                {% else %}
+                Active Campaigns
+                {% endif %}
+            </h3>
+            <span class="text-white-50">
+                {{ total_campaigns }} campaign{{ '' if total_campaigns == 1 else 's' }}
+                {% if search or selected_category %}
+                &middot; <a class="link-light" href="{{ url_for('main.index', _anchor='categories') }}">Clear filter</a>
+                {% endif %}
+            </span>
+        </div>
 
-            <p class="boxLook">
-                Get Started With Superchat
-            </p>
+        {% if not campaigns %}
+        <p class="description text-center text-white-50 py-5">No campaigns found.</p>
+        {% endif %}
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for campaign in campaigns %}
+            {% set pct = ((campaign.raised / campaign.goalAmount) * 100) if campaign.goalAmount else 0 %}
+            {% set img = campaign.campaignImage or '' %}
+            <div class="col">
+                <a href="{{ url_for('main.campaign_detail', campaign_id=campaign.id) }}" class="card campaign-card h-100 text-decoration-none">
+                    <div class="campaign-img-wrap">
+                        <img class="campaign-img" loading="lazy" alt="{{ campaign.title }}"
+                            src="{{ img if img.startswith('http') else url_for('static', filename='img/' ~ img) }}">
+                        <span class="badge campaign-cat">{{ campaign.category }}</span>
+                        {% if campaign.isFeatured %}
+                        <span class="badge bg-warning text-dark campaign-featured">Featured</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ campaign.title }}</h5>
+                        <p class="campaign-creator mb-3">by {{ campaign.creatorName }}</p>
+
+                        <div class="mt-auto">
+                       
+                            <div class="d-flex justify-content-between">
+                                <span><strong>${{ '{:,.0f}'.format(campaign.raised) }}</strong>
+                                    <span class="text-white-50">raised of ${{ '{:,.0f}'.format(campaign.goalAmount) }}</span></span>
+                                <span class="text-white-50">{{ pct|round|int }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if total_campaigns > limit %}
+        <div class="text-center mt-5">
+            {% if show_all %}
+            <a class="btn btn-outline-light btn-lg px-5"
+                href="{{ url_for('main.index', search=search or None, category=selected_category or None, _anchor='campaigns') }}">SHOW LESS</a>
+            {% else %}
+            <a class="btn btn-outline-light btn-lg px-5"
+                href="{{ url_for('main.index', search=search or None, category=selected_category or None, show='all', _anchor='campaigns') }}">SHOW ALL ({{ total_campaigns }})</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+
+      
+
+
+
+        <div class="mx-auto container-fluid text-center">
+
+            <div class="borderTag">
+
+                <p class="boxLook">
+                    Get Started With Superchat
+                </p>
+
+                <br>
+
+                <button class="btn btn-light btn-lg">
+                    <a style="text-decoration: none; color: black" href="{{ url_for('main.donation') }}">
+                        Subscribe
+                    </a>
+                </button>
+
+            </div>
 
             <br>
 
-            <button class="btn btn-light btn-lg">
-                <a style="text-decoration: none; color: black" href="/donation.html">
-                    Subscribe
-                </a>
-            </button>
-
         </div>
-
-        <br>
-
-    </div>
 
     </div>
 
 
     <br><br><br><br>
-    
+
+
     <footer class="footer">
+
         <div class="container">
+
             <div class="row gy-4 pb-4">
-                <div class="col-12">
+
+                <div class="col-12 col-lg-4">
 
                     <h5>Superchats</h5>
 
-                    <a href="{{ url_for('main.index') }}">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png"
-                            alt="Superchats Home">
-                    </a>
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
 
                     <p class="mt-3">
                         Experience the very best crowdfunding design for content creators and fans
                     </p>
 
+                    <a>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                            class="bi bi-youtube" viewBox="0 0 16 16">
+                            <path
+                                d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z" />
+                        </svg>
+                    </a>
+
                 </div>
+
+
+                <div class="col-6 col-sm-4 offset-lg-2 col-lg-2">
+
+                    <div class="footerTitle">Company</div>
+
+                    <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                        <li><a>About Us</a></li>
+                        <li><a>Careers</a></li>
+                        <li><a>Pricing</a></li>
+                    </ul>
+
+                </div>
+
+
+                <div class="col-6 col-sm-4 col-lg-2">
+
+                    <div class="footerTitle">Popular</div>
+
+                    <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                        <li><a>Trending</a></li>
+                        <li><a href="{{ url_for('main.donation') }}">Donation</a></li>
+                    </ul>
+
+                </div>
+
+
+                <div class="col-6 col-sm-4 col-lg-2">
+
+                    <div class="footerTitle">Legal</div>
+
+                    <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
+                        <li><a>Terms of Service</a></li>
+                        <li><a>Privacy Policy</a></li>
+                    </ul>
+
+                </div>
+
             </div>
+
         </div>
+
     </footer>
+
 
 
 </body>
