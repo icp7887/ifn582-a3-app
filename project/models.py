@@ -1,7 +1,9 @@
 from . import mysql
 
 
-# CAMPAIGN FETCH FUNCTIONS
+# =====================================================================
+# HOMEPAGE (campaign list, search, categories, featured)
+# =====================================================================
 
 # Active campaigns with creator name and total raised, featured first
 _ACTIVE_CAMPAIGNS = """
@@ -14,19 +16,13 @@ _ACTIVE_CAMPAIGNS = """
 _ACTIVE_ORDER = " GROUP BY c.id, u.username ORDER BY c.isFeatured DESC, c.startDate DESC, c.id DESC"
 
 
-def get_all_campaigns():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM Campaign")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
 def get_active_campaigns():
     cur = mysql.connection.cursor()
     cur.execute(_ACTIVE_CAMPAIGNS + _ACTIVE_ORDER)
     rows = cur.fetchall()
     cur.close()
     return rows
+
 
 def search_campaigns(search):
     # Matches campaign title, category or creator name
@@ -40,6 +36,7 @@ def search_campaigns(search):
     cur.close()
     return results
 
+
 def get_campaigns_by_category(category):
     cur = mysql.connection.cursor()
     cur.execute(_ACTIVE_CAMPAIGNS + " AND c.category = %s" + _ACTIVE_ORDER, (category,))
@@ -47,23 +44,54 @@ def get_campaigns_by_category(category):
     cur.close()
     return results
 
-def get_campaign_by_id(campaign_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM Campaign WHERE id = %s", (campaign_id,))
-    row = cur.fetchone()
-    cur.close()
-    return row
 
-def get_featured_campaigns():
-    # Fetch all campaigns with isFeatured set to TRUE
+def get_categories():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE isFeatured = TRUE")
+    cur.execute("SELECT DISTINCT category FROM campaign ORDER BY category")
+    results = cur.fetchall()
+    cur.close()
+    return results
+
+
+def get_featured_active_campaigns():
+    # Featured campaigns with the creator's photo and tagline for the homepage cards
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT c.*, u.username AS creatorName, cr.tagline AS creatorTagline, cr.profileImage AS creatorImage
+        FROM campaign c
+        JOIN user u ON u.id = c.creatorID
+        JOIN creator cr ON cr.id = c.creatorID
+        WHERE c.status = 'Active' AND c.isFeatured = TRUE
+        ORDER BY c.id
+    """)
     rows = cur.fetchall()
     cur.close()
     return rows
 
 
+# =====================================================================
+# CAMPAIGN (general lookups)
+# =====================================================================
+
+def get_all_campaigns():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_campaign_by_id(campaign_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE id = %s", (campaign_id,))
+    campaign = cur.fetchone()
+    cur.close()
+    return campaign
+
+
+# =====================================================================
 # ADMIN FETCH FUNCTIONS
+# =====================================================================
 
 def get_pending_campaigns():
     # Fetch all campaigns with status 'Pending'
@@ -92,7 +120,9 @@ def get_flagged_campaigns():
     return rows
 
 
+# =====================================================================
 # ADMIN ACTION FUNCTIONS
+# =====================================================================
 
 def update_campaign_status(campaign_id, new_status):
     # Update campaign status to Approved or Rejected
@@ -127,7 +157,9 @@ def set_campaign_flagged(campaign_id, is_flagged):
     cur.close()
 
 
+# =====================================================================
 # USER FETCH FUNCTIONS
+# =====================================================================
 
 def get_user_by_email(email):
     cur = mysql.connection.cursor()
@@ -156,39 +188,3 @@ def get_user_by_id(user_id):
     user = cur.fetchone()
     cur.close()
     return user
-
-def get_categories():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT DISTINCT category FROM campaign ORDER BY category")
-    results = cur.fetchall()
-    cur.close()
-    return results
-
-def get_featured_campaigns():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE isFeatured = TRUE")
-    results = cur.fetchall()
-    cur.close()
-    return results
-
-def get_campaign_by_id(campaign_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE id = %s", (campaign_id,))
-    campaign = cur.fetchone()
-    cur.close()
-    return campaign
-
-def get_featured_active_campaigns():
-    # Featured campaigns with the creator's photo and tagline for the homepage cards
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT c.*, u.username AS creatorName, cr.tagline AS creatorTagline, cr.profileImage AS creatorImage
-        FROM campaign c
-        JOIN user u ON u.id = c.creatorID
-        JOIN creator cr ON cr.id = c.creatorID
-        WHERE c.status = 'Active' AND c.isFeatured = TRUE
-        ORDER BY c.id
-    """)
-    rows = cur.fetchall()
-    cur.close()
-    return rows
