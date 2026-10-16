@@ -47,7 +47,7 @@ def get_campaigns_by_category(category):
 
 def get_categories():
     cur = mysql.connection.cursor()
-    cur.execute("SELECT DISTINCT category FROM campaign ORDER BY category")
+    cur.execute("SELECT DISTINCT category FROM campaign WHERE status = 'Active' ORDER BY category")
     results = cur.fetchall()
     cur.close()
     return results
