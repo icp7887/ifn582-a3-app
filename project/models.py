@@ -3,6 +3,17 @@ from . import mysql
 
 # CAMPAIGN FETCH FUNCTIONS
 
+# Active campaigns with creator name and total raised, featured first
+_ACTIVE_CAMPAIGNS = """
+    SELECT c.*, u.username AS creatorName, COALESCE(SUM(d.amount), 0) AS raised
+    FROM campaign c
+    JOIN user u ON u.id = c.creatorID
+    LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+    WHERE c.status = 'Active'
+"""
+_ACTIVE_ORDER = " GROUP BY c.id, u.username ORDER BY c.isFeatured DESC, c.startDate DESC, c.id DESC"
+
+
 def get_all_campaigns():
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM Campaign")
@@ -10,11 +21,20 @@ def get_all_campaigns():
     cur.close()
     return rows
 
+def get_active_campaigns():
+    cur = mysql.connection.cursor()
+    cur.execute(_ACTIVE_CAMPAIGNS + _ACTIVE_ORDER)
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
 def search_campaigns(search):
+    # Matches campaign title, category or creator name
+    like = '%' + search + '%'
     cur = mysql.connection.cursor()
     cur.execute(
-        "SELECT * FROM campaign WHERE title LIKE %s",
-        ('%' + search + '%',)
+        _ACTIVE_CAMPAIGNS + " AND (c.title LIKE %s OR c.category LIKE %s OR u.username LIKE %s)" + _ACTIVE_ORDER,
+        (like, like, like)
     )
     results = cur.fetchall()
     cur.close()
@@ -22,10 +42,7 @@ def search_campaigns(search):
 
 def get_campaigns_by_category(category):
     cur = mysql.connection.cursor()
-    cur.execute(
-        "SELECT * FROM campaign WHERE category = %s",
-        (category,)
-    )
+    cur.execute(_ACTIVE_CAMPAIGNS + " AND c.category = %s" + _ACTIVE_ORDER, (category,))
     results = cur.fetchall()
     cur.close()
     return results
@@ -36,6 +53,14 @@ def get_campaign_by_id(campaign_id):
     row = cur.fetchone()
     cur.close()
     return row
+
+def get_featured_campaigns():
+    # Fetch all campaigns with isFeatured set to TRUE
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE isFeatured = TRUE")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
 
 
 # ADMIN FETCH FUNCTIONS
@@ -152,3 +177,18 @@ def get_campaign_by_id(campaign_id):
     campaign = cur.fetchone()
     cur.close()
     return campaign
+
+def get_featured_active_campaigns():
+    # Featured campaigns with the creator's photo and tagline for the homepage cards
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT c.*, u.username AS creatorName, cr.tagline AS creatorTagline, cr.profileImage AS creatorImage
+        FROM campaign c
+        JOIN user u ON u.id = c.creatorID
+        JOIN creator cr ON cr.id = c.creatorID
+        WHERE c.status = 'Active' AND c.isFeatured = TRUE
+        ORDER BY c.id
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return rows

@@ -61,7 +61,8 @@
                     </form>
                 </div>
             </div>
-            {% include '_auth_nav.html' %}
+           {# TODO: enable after login/register routes are merged #}
+           {# {% include '_auth_nav.html' %} #}
         </div>
     </nav>
 
@@ -76,13 +77,13 @@
             <div class="frontContent">
                 <h2 class="fontLook">Support Creators</h2>
                 <p style="font-size:1.26rem;">Mr Beast Philanthropy</p>
-                <a href="{{ url_for('main.donation') }}" class="btn btn-light btn-lg">Explore</a>
+                <a href="{{ url_for('main.donation_page') }}" class="btn btn-light btn-lg">Explore</a>
             </div>
         </div>
     </header>
 
 
-    <div class="colorChange">
+    <div class="colorChange" id="how-it-works">
         <div class="container-fluid py-5 text-center">
             <div class="row justify-content-center">
                 <div class="col">
@@ -118,7 +119,7 @@
 
             <br><br>
 
-            <h1 class="mx-auto container-fluid boldLook">
+            <h1 id="featured" class="mx-auto container-fluid boldLook">
                 Today's Top Featured
             </h1>
             <!-- Featured campaigns are chosen on the admin dashboard -->
@@ -129,7 +130,7 @@
                 {% set fimg = f.creatorImage or f.campaignImage or '' %}
                 <div class="col">
                     <a class="card creator-card text-decoration-none text-white"
-                        href="{{ url_for('main.campaign_detail', campaign_id=f.id) }}">
+                        href="{{ url_for('main.campaign_donation', campaign_id=f.id) }}">
 
                         <div class="card-body">
                             <h5 class="card-title">{{ f.creatorName }}</h5>
@@ -204,7 +205,7 @@
             {% set pct = ((campaign.raised / campaign.goalAmount) * 100) if campaign.goalAmount else 0 %}
             {% set img = campaign.campaignImage or '' %}
             <div class="col">
-                <a href="{{ url_for('main.campaign_detail', campaign_id=campaign.id) }}" class="card campaign-card h-100 text-decoration-none">
+                <a href="{{ url_for('main.campaign_donation', campaign_id=campaign.id) }}" class="card campaign-card h-100 text-decoration-none">
                     <div class="campaign-img-wrap">
                         <img class="campaign-img" loading="lazy" alt="{{ campaign.title }}"
                             src="{{ img if img.startswith('http') else url_for('static', filename='img/' ~ img) }}">
@@ -261,7 +262,7 @@
                 <br>
 
                 <button class="btn btn-light btn-lg">
-                    <a style="text-decoration: none; color: black" href="{{ url_for('main.donation') }}">
+                    <a style="text-decoration: none; color: black" href="{{ url_for('main.donation_page') }}">
                         Subscribe
                     </a>
                 </button>
@@ -278,74 +279,38 @@
     <br><br><br><br>
 
 
-    <footer class="footer">
-
+        <footer class="footer">
         <div class="container">
-
             <div class="row gy-4 pb-4">
 
-                <div class="col-12 col-lg-4">
-
-                    <h5>Superchats</h5>
-
-                    <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
-
+                <div class="col-12 col-lg-6">
+                    <h5>Superchat</h5>
                     <p class="mt-3">
                         Experience the very best crowdfunding design for content creators and fans
                     </p>
-
-                    <a>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                            class="bi bi-youtube" viewBox="0 0 16 16">
-                            <path
-                                d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.01 2.01 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.01 2.01 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31 31 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.01 2.01 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A100 100 0 0 1 7.858 2zM6.4 5.209v4.818l4.157-2.408z" />
-                        </svg>
-                    </a>
-
                 </div>
 
-
-                <div class="col-6 col-sm-4 offset-lg-2 col-lg-2">
-
-                    <div class="footerTitle">Company</div>
-
+                <div class="col-6 col-lg-3">
+                    <div class="footerTitle">Explore</div>
                     <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-                        <li><a>About Us</a></li>
-                        <li><a>Careers</a></li>
-                        <li><a>Pricing</a></li>
+                        <li><a href="{{ url_for('main.index', _anchor='featured') }}">Featured</a></li>
+                        <li><a href="{{ url_for('main.index', _anchor='categories') }}">Categories</a></li>
+                        <li><a href="{{ url_for('main.index', _anchor='campaigns') }}">All Campaigns</a></li>
                     </ul>
-
                 </div>
 
-
-                <div class="col-6 col-sm-4 col-lg-2">
-
-                    <div class="footerTitle">Popular</div>
-
+                <div class="col-6 col-lg-3">
+                    <div class="footerTitle">Superchat</div>
                     <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-                        <li><a>Trending</a></li>
-                        <li><a href="{{ url_for('main.donation') }}">Donation</a></li>
+                        <li><a href="{{ url_for('main.index', _anchor='how-it-works') }}">How It Works</a></li>
+                        <li><a href="{{ url_for('main.donation_page') }}">Donate</a></li>
                     </ul>
-
-                </div>
-
-
-                <div class="col-6 col-sm-4 col-lg-2">
-
-                    <div class="footerTitle">Legal</div>
-
-                    <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-                        <li><a>Terms of Service</a></li>
-                        <li><a>Privacy Policy</a></li>
-                    </ul>
-
                 </div>
 
             </div>
 
+            <p class="text-white-50 small mb-0">&copy; 2026 Superchat</p>
         </div>
-
     </footer>
 
 

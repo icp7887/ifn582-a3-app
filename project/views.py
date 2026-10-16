@@ -6,17 +6,39 @@ bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
-    campaigns = models.get_all_campaigns()
+    # Read search text and selected category from the URL (e.g. /?search=water or /?category=Arts)
+    search = request.args.get('search', '').strip()
+    selected_category = request.args.get('category', '').strip()
+
+    # Choose which campaigns to show
+    if search:
+        campaigns = models.search_campaigns(search)
+    elif selected_category:
+        campaigns = models.get_campaigns_by_category(selected_category)
+    else:
+        campaigns = models.get_active_campaigns()
+
     categories = models.get_categories()
-    featured_campaigns = models.get_featured_campaigns()
+    featured = models.get_featured_active_campaigns()
+
+    # Show only the first few campaigns unless "SHOW ALL" was clicked (/?show=all)
+    limit = 3
+    show_all = request.args.get('show') == 'all'
+    total_campaigns = len(campaigns)    # Count before cutting the list
+    if not show_all:
+        campaigns = campaigns[:limit]
 
     return render_template(
         'index.html',
         campaigns=campaigns,
         categories=categories,
-        featured_campaigns=featured_campaigns
+        featured=featured,
+        search=search,
+        selected_category=selected_category,
+        total_campaigns=total_campaigns,
+        limit=limit,
+        show_all=show_all,               # Template switches between SHOW ALL / SHOW LESS
     )
-
 #this is just a test route, delete later. It is used to verify that the admin dashboard fetch functions are working without the front-end.#
 @bp.route('/admin-dashboard-test') 
 def admin_dashboard_test():

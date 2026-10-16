@@ -1,0 +1,18 @@
+<div class="auth-nav d-flex align-items-center gap-2">
+    {% if g.user %}
+        {# name is hidden on phones to save space; the role only shows on wide screens #}
+        <span class="auth-name d-none d-sm-inline">{{ g.user.username }}<span class="d-none d-xl-inline"> ({{ g.user.role }})</span></span>
+        {% if g.user.role == 'Creator' %}
+            <a class="btn btn-outline-light btn-sm text-nowrap" href="{{ url_for('main.campaign') }}">Dashboard</a>
+        {% elif g.user.role == 'Admin' %}
+            <a class="btn btn-outline-light btn-sm text-nowrap" href="{{ url_for('main.admin_dashboard') }}">Admin</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('main.logout') }}" class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-light btn-sm text-nowrap">Logout</button>
+        </form>
+    {% else %}
+        <a class="btn btn-outline-light btn-sm text-nowrap" href="{{ url_for('main.login') }}">Login</a>
+        <a class="btn btn-light btn-sm text-nowrap" href="{{ url_for('main.register') }}">Register</a>
+    {% endif %}
+</div>
