@@ -8,7 +8,14 @@ bp = Blueprint('main', __name__)
 def index():
     campaigns = models.get_all_campaigns()
     categories = models.get_categories()
-    return render_template('index.html', campaigns=campaigns, categories=categories)
+    featured_campaigns = models.get_featured_campaigns()
+
+    return render_template(
+        'index.html',
+        campaigns=campaigns,
+        categories=categories,
+        featured_campaigns=featured_campaigns
+    )
 
 #this is just a test route, delete later. It is used to verify that the admin dashboard fetch functions are working without the front-end.#
 @bp.route('/admin-dashboard-test') 
@@ -26,22 +33,39 @@ def add():
         flash('Item added.')
         return redirect(url_for('main.index'))
     return render_template('add.html', form=form)
-#search funtionality
+
+# search funtionality
 @bp.route('/search')
 def search():
-    search = request.args.get('search').strip()
+    search = request.args.get('search', '').strip()
+
     if not search:
         return "Please enter something to search."
+
     results = models.search_campaigns(search)
-    return render_template('index.html', campaigns=results)
+    categories = models.get_categories()
+    featured_campaigns = models.get_featured_campaigns()
 
-
+    return render_template(
+        'index.html',
+        campaigns=results,
+        categories=categories,
+        featured_campaigns=featured_campaigns
+    )
+# category 
 @bp.route('/category')
 def category():
     selected_category = request.args.get('category')
     results = models.get_campaigns_by_category(selected_category)
     categories = models.get_categories()
-    return render_template('index.html', campaigns=results, categories=categories)
+    featured_campaigns = models.get_featured_campaigns()
+
+    return render_template(
+        'index.html',
+        campaigns=results,
+        categories=categories,
+        featured_campaigns=featured_campaigns
+    )
 
 #admin dashboard url route
 @bp.route('/admin-dashboard')
@@ -136,3 +160,17 @@ def login():
 def logout():
     session.clear()  # Clear all session data
     return {"message": "Logged out successfully"}, 200
+
+@bp.route('/donation.html')
+def donation_page():
+    return render_template('donation.html')
+
+@bp.route('/donation/<int:campaign_id>')
+def campaign_donation(campaign_id):
+    campaign = models.get_campaign_by_id(campaign_id)
+
+    if campaign is None:
+        return "Campaign not found", 404
+
+    return render_template('donation.html', campaign=campaign)
+

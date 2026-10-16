@@ -138,3 +138,17 @@ def get_categories():
     results = cur.fetchall()
     cur.close()
     return results
+
+def get_featured_campaigns():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE isFeatured = TRUE")
+    results = cur.fetchall()
+    cur.close()
+    return results
+
+def get_campaign_by_id(campaign_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE id = %s", (campaign_id,))
+    campaign = cur.fetchone()
+    cur.close()
+    return campaign

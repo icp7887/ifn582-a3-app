@@ -45,9 +45,10 @@
                 <label for="navToggle" class="phoneView-close">x</label>
 
                 <div class="textMargin">
-                    <form class="form-inline">
+                    <form class="form-inline" action="{{ url_for('main.search') }}" method="GET">
                         <div class="inline">
-                            <input type="search" class="form-control mr-sm-2 searchBar" placeholder="Find creators">
+                            <input type="search" name="search" class="form-control mr-sm-2 searchBar"
+                                placeholder="Search campaigns">
 
                             <button class="btn btn-outline-light my-2 my-sm-0">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -190,89 +191,62 @@
 
             <br><br>
 
-            <div class="row row-cols-1 row-cols-md-3 row-cols-lg-3 g-4">
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+
+                {% for campaign in featured_campaigns %}
 
                 <div class="col">
-                    <div class="card creator-card">
+                    <div class="card creator-card h-100">
 
                         <div class="card-body">
-                            <h5 class="card-title">Drake</h5>
-                            <p class="card-text">Experience behind the scenes</p>
-                        </div>
+                            <h5 class="card-title">
+                                <a href="{{ url_for('main.campaign_donation', campaign_id=campaign.id) }}">
+                                    {{ campaign.title }}
+                                </a>
+                            </h5>
 
-                        <img src="https://upload.wikimedia.org/wikipedia/en/4/46/Drake_-_Toosie_Slide.png"
-                            class="card-img-top">
+                            <p class="card-text">
+                                Goal: ${{ campaign.goalAmount }}
+                            </p>
 
-                        <div class="card-body">
-                            Music
+                            <p class="card-text">
+                                Category: {{ campaign.category }}
+                            </p>
                         </div>
 
                     </div>
                 </div>
 
-
-                <div class="col">
-                    <div class="card creator-card">
-
-                        <div class="card-body">
-                            <h5 class="card-title">All-In Podcast</h5>
-                            <p class="card-text">Chat with besties on the pod</p>
-                        </div>
-
-                        <img src="https://cdn.prod.website-files.com/633cd7641794e536812c0e29/66dd7f9c930b82790d33fefc_Copy_of_All-In_Logos_3_600x.png"
-                            class="card-img-top">
-
-                        <div class="card-body">
-                            Podcasts
-                        </div>
-
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card creator-card">
-
-                        <div class="card-body">
-                            <h5 class="card-title">MKBHD</h5>
-                            <p class="card-text">More reviews on latest technology</p>
-                        </div>
-
-                        <img src="https://i.ytimg.com/vi/idEAABFzpfg/maxresdefault.jpg" class="card-img-top">
-
-                        <div class="card-body">
-                            Tech
-                        </div>
-
-                    </div>
-                </div>
+                {% endfor %}
 
             </div>
 
         </div>
 
+    </div>
 
-        <div class="mx-auto container-fluid text-center">
 
-            <div class="borderTag">
+    <div class="mx-auto container-fluid text-center">
 
-                <p class="boxLook">
-                    Get Started With Superchat
-                </p>
+        <div class="borderTag">
 
-                <br>
-
-                <button class="btn btn-light btn-lg">
-                    <a style="text-decoration: none; color: black" href="/donation.html">
-                        Subscribe
-                    </a>
-                </button>
-
-            </div>
+            <p class="boxLook">
+                Get Started With Superchat
+            </p>
 
             <br>
 
+            <button class="btn btn-light btn-lg">
+                <a style="text-decoration: none; color: black" href="/donation.html">
+                    Subscribe
+                </a>
+            </button>
+
         </div>
+
+        <br>
+
+    </div>
 
     </div>
 
@@ -290,8 +264,10 @@
 
                     <h5>Superchats</h5>
 
-                    <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
+                    <a href="{{ url_for('main.index') }}">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png"
+                            alt="Superchats Home">
+                    </a>
 
                     <p class="mt-3">
                         Experience the very best crowdfunding design for content creators and fans
@@ -326,8 +302,8 @@
                     <div class="footerTitle">Popular</div>
 
                     <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-                        <li><a>Trending</a></li>
-                        <li><a href="/donation.html">Donation</a></li>
+                        <li><a href="{{ url_for('main.index') }}">Trending</a></li>
+                        <li><a href="{{ url_for('main.donation_page') }}">Donation</a></li>
                     </ul>
 
                 </div>
