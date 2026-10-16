@@ -1,22 +1,18 @@
 <!doctype html>
 <html>
+
 <head>
     <title>{% block title %}Fundraising App{% endblock %}</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
-
-    <nav>
-        <a href="{{ url_for('main.index') }}">Home</a>
-    </nav>
-
+    
     {% with msgs = get_flashed_messages() %}
-        {% for m in msgs %}
-            <p class="flash">{{ m }}</p>
-        {% endfor %}
+    {% for m in msgs %}
+    <p class="flash">{{ m }}</p>
+    {% endfor %}
     {% endwith %}
 
     <main>
@@ -24,4 +20,5 @@
     </main>
 
 </body>
+
 </html>
