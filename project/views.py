@@ -21,7 +21,7 @@ def admin_dashboard():
     pending = models.get_pending_campaigns_with_creator() #Approval for Campaigns (includes creator username)
     featured = models.get_featured_campaigns()
     flagged = models.get_flagged_campaigns()
-    counts = models. gets_dashboard_counts() #the 4 stat cards
+    counts = models.gets_dashboard_counts() #the 4 stat cards
     campaigns = models.get_all_campaigns_with_details()  #Campaign Management and Featured Campaigns
     creators = models.get_all_creators()  #User Management and teh Create Campaign drop down 
     return render_template(
