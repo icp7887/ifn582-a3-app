@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import InputRequired, Length
 
-class ItemForm(FlaskForm):
-    name = StringField('Name', validators=[InputRequired(), Length(max=100)])
-    description = TextAreaField('Description')
-    submit = SubmitField('Add')
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import InputRequired
+
+class LoginForm(FlaskForm):
+    identifier = StringField('Username or email', validators=[InputRequired()])
+    password = PasswordField('Password', validators=[InputRequired()])
+    submit = SubmitField('Log in')

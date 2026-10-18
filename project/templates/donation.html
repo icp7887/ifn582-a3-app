@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-    <title> SuperChats | Niko Omilana </title>
+    <title> SuperChats | {{ campaign.title }} </title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <head>
-          <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+          <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     </head>
 
     <body>
@@ -16,9 +16,8 @@
 
         <div class="addMargin">
 
-        <a class="navbar-brand" href ="index.html">
-         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png" 
-         > 
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">
+         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png"> 
          <br><br>
         </a>
         </div>
@@ -47,10 +46,10 @@
             </div>
 
             <div class = "textMargin">
-            <form class="form-inline">
+            <form class="form-inline" method="get" action="{{ url_for('main.index') }}#campaigns" role="search">
                 <div class ="inline">
 
-                <input type="search" class="form-control mr-sm-2 searchBar"  placeholder="Find creators">
+                <input type="search" name="search" aria-label="Search campaigns" class="form-control mr-sm-2 searchBar"  placeholder="Find creators or campaigns">
                 <button class="btn btn-outline-light my-2 my-sm-0">
 
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -60,21 +59,34 @@
             </form>
             </div>
         </div>
+            {% include '_auth_nav.html' %}
         </div>
         </nav>
 
+        {% include '_flashes.html' %}
+
+        {% set pct = ((campaign.raised / campaign.goalAmount) * 100) if campaign.goalAmount else 0 %}
+        {% set img = campaign.campaignImage or '' %}
+        {% set detail_url = url_for('main.campaign_detail', campaign_id=campaign.id) %}
+        {% set input_style = 'background-color: #000; border: 1px solid #333; color: #fff;' %}
+        {% set error_style = 'background-color: #000; border: 1px solid #dc3545; color: #fff;' %}
+        {% set label_style = 'font-size: 0.85rem;' %}
+        {% set tier_badges = {'Superfan': 'bg-warning text-dark', 'Member': 'bg-light text-dark', 'Stan': 'bg-secondary'} %}
+
         <header class="front">
 
-            <img class="frontImg"  src="https://shopndl.com/cdn/shop/files/1Q4A2840.jpg?v=1762270409&width">
+            <img class="frontImg" alt="{{ campaign.title }}" src="{{ img if img.startswith('http') else url_for('static', filename='img/' ~ img) }}">
             <div class="frontOverlay">
 
 
                 <div class="frontContent">
                     <span class="badge bg-warning mb-2">Creator</span>
+                    {% if campaign.creatorVerified %}<span class="badge bg-success mb-2">Verified</span>{% endif %}
+                    {% if campaign.status in ('Paused', 'Closed') %}<span class="badge bg-secondary mb-2">{{ campaign.status }}</span>{% elif campaign.status != 'Active' %}<span class="badge bg-secondary mb-2">{{ campaign.status }} &middot; preview</span>{% endif %}
 
-                    <h2 class = "fontLook">Niko Omilana</h2>
+                    <h2 class = "fontLook">{{ campaign.creatorName }}</h2>
 
-                <p class="description">Talented storyteller, brave and charitable content creator </p>
+                <p class="description">{{ campaign.creatorBio or 'Superchat creator' }}</p>
             </div>
         </div>
     </header>
@@ -83,14 +95,14 @@
 
             <div class="admin-card">
                 <br><br>
-                <h2 class = "fontLook text-center"> The Water Project</h2>
+                <h2 class = "fontLook text-center"> {{ campaign.title }}</h2>
                 <br>
-                <p class="description text-center">A fundraiser effort to build wells in developing nations, like Africa. Together we can improve access to clean drinking water for all ~  founder of NDL, Shades by Niko and member of Betasquad </p>
+                <p class="description text-center">{{ campaign.description or '' }}</p>
 <br>
 
                    <div class="progress" style="height: 2rem; background-color: #1c1c1c; border: 1px solid #333;">
 
-                    <div class="progress-bar bg-warning" style="width: 26%;">26%</div>
+                    <div class="progress-bar bg-warning" style="width: {{ [pct, 100]|min|round(1) }}%;">{{ pct|round|int }}%</div>
 
 
                 </div><br>
@@ -101,33 +113,34 @@
                 <div class="p-3 text-center" style="background: #1a1a1a; border: 1px solid #333;">
 
                     <div class="text-secondary  fw-bold">SUPERCHATS</div>
-                    <div class=" mb-0 text-white"><h3>111</h3></div>
+                    <div class=" mb-0 text-white"><h3>{{ campaign.donationCount }}</h3></div>
 
 
                 </div>
             </div>
-            
+
     <div class="col">
         <div class="p-3 text-center rounded" style="background: #1a1a1a; border: 1px solid #333;">
             <div class="text-secondary fw-bold">DONATIONS</div>
 
-            <div class=" mb-0 text-white"><h3>$1,300</h3></div>
+            <div class=" mb-0 text-white"><h3>${{ '{:,.0f}'.format(campaign.raised) }}</h3></div>
                 </div>
             </div>
-            
+
             <div class="col">
                 <div class="p-3 text-center rounded" style="background: #1a1a1a; border: 1px solid #333;">
                 <div class="text-secondary fw-bold">AIM</div>
 
-                <div class=" mb-0 text-white"><h3>$5,000</h3></div>
+                <div class=" mb-0 text-white"><h3>${{ '{:,.0f}'.format(campaign.goalAmount) }}</h3></div>
                 </div>
             </div>
         </div>
 
                 <br><br>
-             
+
     </div>
 
+            {% if tiers %}
             <div class="admin-card">
                 <h2 class = "fontLook text-center">Membership Tiers</h2>
 
@@ -135,72 +148,33 @@
 
         <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
 
-        <div class="col">
-            <div class="card creator-card h-100">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">Stan</h5>
-                           
-                            <div class="mb-2"><span class="h3 mb-0">$5</span> <span class="text-white-50">/month</span></div>
-                        <p class="card-text">Get started</p>
-                        
-                        <ul class="list-unstyled mb-4">
-                            <li class="mb-2">✓ 1 message </li>
-
-                            <li class="mb-2">✓ Join Whatsapp group</li>
-
-                                <li class="mb-2">✓ Shoutout video </li>
-                            </ul>
-                            <a class="btn btn-outline-light mt-auto">Subscribe</a>
-                    </div>
-                </div>
-            </div>
-
+            {% for t in tiers %}
+            {% set middle = loop.index == 2 %}
             <div class="col">
-                    <div class="card creator-card h-100 border-warning ">
+                <div class="card creator-card h-100 {% if middle %}border-warning{% endif %}">
 
-                    <div class="card-body d-flex flex-column pt-4">
-                        <h5 class="card-title">Member</h5>
-                    <div class="mb-2"><span class="h3 mb-0">$15</span> <span class="text-white-50">/month</span></div>
-                    <p class="card-text">Unseen content</p>
-                    <ul class="list-unstyled mb-4">
+                    <div class="card-body d-flex flex-column {% if middle %}pt-4{% endif %}">
+                        <h5 class="card-title">{{ t.tierName }}</h5>
 
-                        <li class="mb-2">✓ Stan pros included </li>
-                                    <li class="mb-2">✓ Behind the scenes content </li>
-
-                                    <li class="mb-2">✓ Follow back on IG </li>
-                            </ul>
-                            <a class="btn btn-outline-warning mt-auto">Subscribe</a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col">
-                    <div class="card creator-card h-100">
-
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">Superfan</h5>
-
-
-                            <div class="mb-2"><span class="h3 mb-0">$30</span> <span class="text-white-50">/month</span></div>
-                        <p class="card-text">Loyalty perks</p>
+                            <div class="mb-2"><span class="h3 mb-0">${{ '{:,.0f}'.format(t.price) }}</span> <span class="text-white-50">/month</span></div>
 
                         <ul class="list-unstyled mb-4">
-
-                            <li class="mb-2">✓ Member perks included </li>
-
-                                <li class="mb-2">✓ Free merch  </li>
-                                <li class="mb-2">✓ Facetime call </li>
-                            </ul>
-                            <a class="btn btn-outline-light mt-auto">Subscribe</a>
-                        </div>
+                            <li class="mb-2">✓ {{ t.description }} </li>
+                            {% if not loop.first %}<li class="mb-2">✓ {{ tiers[loop.index0 - 1].tierName }} perks included </li>{% endif %}
+                        </ul>
+                            <a class="btn {{ 'btn-outline-warning' if middle else 'btn-outline-light' }} mt-auto"
+                                href="{{ url_for('main.campaign_detail', campaign_id=campaign.id, tier=t.id, _anchor='donate') }}">Subscribe</a>
                     </div>
                 </div>
-
             </div>
+            {% endfor %}
+
+        </div>
         </div>
 
 
     </div>
+            {% endif %}
 
             <br>
 
@@ -208,156 +182,136 @@
           <div class="p-3 mt-4" style="background:#111; border:1px solid #333; border-radius:0.5rem;">
     <h5 class = "boxLook">Posts Updates</h5>
         <br>
-        <div class="pb-3 mb-3" style="border-bottom: 1px solid #222;">
+        {% for p in posts %}
+        <div class="{% if not loop.last %}pb-3 mb-3{% endif %}" {% if not loop.last %}style="border-bottom: 1px solid #222;"{% endif %}>
             <div class="d-flex justify-content-between align-items-baseline mb-1">
 
-                <div class="text-white" style="font-weight: 300; font-size: 1.5rem;">Free merch for Superfans sent!</div>
+                <div class="text-white" style="font-weight: 300; font-size: 1.5rem;">{{ p.title }}</div>
+                <div class="text-white-50" style="font-size: 0.9rem;">{{ p.postDate.strftime('%d %b %Y') }}</div>
             </div>
+            {% if p.postImage %}
+            <img src="{{ p.postImage if p.postImage.startswith('http') else url_for('static', filename='img/' ~ p.postImage) }}" alt="{{ p.title }}" class="my-2" style="max-width: 320px; max-height: 200px; object-fit: cover; border-radius: 0.5rem;">
+            {% endif %}
+            <div class="text-white-50">{{ p.content }}</div>
         </div>
-
-        <div class="pb-3 mb-3" style="font-weight: 300; font-size: 1.5rem; border-bottom: 1px solid #222;">
-
-            <div class="d-flex justify-content-between align-items-baseline mb-1">
-
-            <div class="text-white" style=" font-weight: 300; font-size: 1.5rem; ">BTS video uploaded for Members and Superfans!!</div>
-
-
-        </div>
-
-            </div>
-
-            <div>
-                <div class="d-flex justify-content-between align-items-baseline mb-1">
-
-                    <div class="text-white" style="font-weight: 300; font-size: 1.5rem; ">Thank you Superchats, 100 donations milestone!</div>
-
-                    
-                </div>
-            </div>
+        {% else %}
+        <div class="text-white-50" style="font-weight: 300; font-size: 1.2rem;">No updates yet.</div>
+        {% endfor %}
         </div>
 <br><br>
-          
-        <div class="p-3 mt-4" style="background:#111; border:1px solid #333; border-radius:0.5rem;">
+
+        <div id="supporters" class="p-3 mt-4" style="background:#111; border:1px solid #333; border-radius:0.5rem;">
         <h5 class = "boxLook">Recent Supporters</h5>
         <br>
+            {% if donations %}
             <div class="table-responsive">
                 <table class="table align-middle mb-0 text-white">
                     <thead>
                         <tr style="border-bottom: 1px solid #333;">
-
                             <th class="pb-2" style="font-weight: 1000; font-size: 1rem; border: none;">Supporter</th>
-
-
+                            <th class="pb-2" style="font-weight: 1000; font-size: 1rem; border: none;">Amount</th>
+                            <th class="pb-2" style="font-weight: 1000; font-size: 1rem; border: none;">Tier</th>
                             <th class="pb-2" style="font-weight: 1000; font-size: 1rem; border: none;">Message</th>
                         </tr>
-                        </thead>
+                    </thead>
 
-                            <tbody style = "font-size: 1.2rem; font-weight: 400;">
-
-                                    <td  >Katie</td>
-
-                                <td  style="padding: 26px;" >Been watching you since a kid! Really love your work, and love how you give back to charity. So this my way of saying thank you! </td>
-
-                            </tr>
-
-                                <td >Romy</td>
-
-                            <td style="padding: 26px;" >Your travel series was amazing! Its crazy how the power of kindness helped you travel across the world with 0$ </td>
-                        </tr>
+                    <tbody style="font-size: 1.2rem; font-weight: 400;">
+                        {% for d in donations %}
+                        {% set last = 'border: none;' if loop.last else '' %}
                         <tr>
-                            <br>
-                            <td   style="border: none;">Tessa</td>
-
-                        <td  style="padding: 26px; border: none;" >Grew up watching you bro. Inspiring to see you expose racism and stand up for the truth</td>
-                    </tr>
-                </tbody>
-
-            </table>
+                            <td style="{{ last }}">{{ d.donorName }}</td>
+                            <td style="{{ last }}">${{ '{:,.2f}'.format(d.amount) }}{% if d.tierName %}/month{% endif %}</td>
+                            <td style="{{ last }}">{% if d.tierName %}<span class="badge {{ tier_badges.get(d.tierName, 'bg-secondary') }}">{{ d.tierName }}</span>{% else %}<span class="text-white-50">One-off</span>{% endif %}</td>
+                            <td style="padding: 26px; {{ last }}">{{ d.message or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 <br>
 
     </div>
+            {% else %}
+            <p class="text-white-50" style="font-size: 1.2rem;">No donations yet. Be the first to support this campaign!</p>
+            {% endif %}
 </div>
 
         <br><br><br>
 
-    <h5 class = "fontLook text-center" >Payment Details</h5>
+    <h5 id="donate" class = "fontLook text-center" >Payment Details</h5>
         <div class="p-4 mt-4" style="background:#111; border:1px solid #333; border-radius:0.5rem;">
 
+{% if campaign.status != 'Active' %}
 
+<p class="text-muted mb-0" style="font-size: 0.9rem;">
+{% if campaign.status == 'Paused' %}Donations to this campaign are paused for now.
+{% elif campaign.status == 'Closed' %}This campaign has closed and is no longer taking donations. Thank you to everyone who supported it!
+{% else %}Donations open once this campaign has been approved.{% endif %}
+</p>
+
+{% elif not g.user %}
+
+<p class="text-muted mb-4" style="font-size: 0.9rem;">You need a Supporter account to donate. Please log in or register first.</p>
+<a class="btn px-4 me-2" style="background: #fff; color: #000; font-weight: 500; border: none;" href="{{ url_for('main.login', next=detail_url) }}">Log in</a>
+<a class="btn btn-outline-light px-4" href="{{ url_for('main.register') }}">Register</a>
+
+{% elif g.user.role != 'Customer' %}
+
+<p class="text-muted mb-0" style="font-size: 0.9rem;">Only Supporter accounts can donate. You are logged in as a {{ g.user.role }}.</p>
+
+{% else %}
 
 <p class="text-muted mb-4" style="font-size: 0.9rem;">Ensure all payments details are correct before subscribing</p>
 
-<form>
+<form method="post" action="{{ url_for('main.donate', campaign_id=campaign.id) }}#donate" novalidate>
+    {{ form.hidden_tag() }}
     <div class="row g-3">
 
+        {% for field, placeholder in [(form.donor_name, 'Your name'), (form.address, 'Your billing address'),
+                                            (form.email, 'you@gmail.com')] %}
+        <div class="col-md-6">
+            {{ field.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), placeholder=placeholder, style=(error_style if field.errors else input_style)) }}
+            {% if field.errors %}<div class="invalid-feedback">{{ field.errors[0] }}</div>{% endif %}
+        </div>
+        {% endfor %}
 
-        
-    <div class="col-md-6">
+        <div class="col-md-6">
+            {{ form.tier.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.tier(class="form-select" + (" is-invalid" if form.tier.errors else ""), style=(error_style if form.tier.errors else input_style)) }}
+            {% if form.tier.errors %}<div class="invalid-feedback">{{ form.tier.errors[0] }}</div>{% endif %}
+        </div>
 
-        <label class="form-label text-secondary mb-1" style="font-size: 0.85rem;">Full Name</label>
+        <div class="col-md-6">
+            {{ form.amount.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.amount(class="form-control" + (" is-invalid" if form.amount.errors else ""), placeholder="25.00", inputmode="decimal", style=(error_style if form.amount.errors else input_style)) }}
+            {% if form.amount.errors %}<div class="invalid-feedback">{{ form.amount.errors[0] }}</div>{% endif %}
+        </div>
 
-        <input required type="text" class="form-control"  placeholder="Your name" style="background-color: #000; border: 1px solid #333; color: #fff;">
+        <div class="col-md-6">
+            {{ form.payment_method.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.payment_method(class="form-select" + (" is-invalid" if form.payment_method.errors else ""), style=(error_style if form.payment_method.errors else input_style)) }}
+            {% if form.payment_method.errors %}<div class="invalid-feedback">{{ form.payment_method.errors[0] }}</div>{% endif %}
+        </div>
+
+        <div class="col-12">
+            {{ form.message.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else ""), rows=2, maxlength=500, placeholder="Leave a message of support", style=(error_style if form.message.errors else input_style)) }}
+            {% if form.message.errors %}<div class="invalid-feedback">{{ form.message.errors[0] }}</div>{% endif %}
+        </div>
     </div>
 
 
-                    <div class="col-md-6">
+    <div class="mt-4">
+        {{ form.submit(class="btn px-4", style="background: #fff; color: #000; font-weight: 500; border: none;") }}
+    </div>
+</form>
 
-                        <label class="form-label text-secondary mb-1" style="font-size: 0.85rem;">Address</label>
-                        <input required type="text" class="form-control"  placeholder="Your billing address" style="background-color: #000; border: 1px solid #333; color: #fff;">
-                </div>
-
-                    <div class="col-md-6">  
-
-                        <label class="form-label text-secondary mb-1" style="font-size: 0.85rem;">Email</label>
-
-
-                        <input  required type="email" class="form-control" placeholder="you@gmail.com" style="background-color: #000; border: 1px solid #333; color: #fff;">
-                    </div>
-                
-                <div class="col-md-6">
-                        <label class="form-label text-secondary mb-1" style="font-size: 0.85rem;">Tier</label>
-
-                        <select class="form-select" style="background-color: #000; border: 1px solid #333; color: #fff;">
-                                <option value="bronze"> $5/month | Stan</option>
-
-
-                    <option value="silver"> $15/month | Member</option>
-                    <option value="gold"> $30/month | Superfan</option>
-
-            </select>
-        </div>
-        <div class="col-md-6">
-            
-                <label class="form-label text-secondary mb-1" style="font-size: 0.85rem;" >Payment Method</label>
-
-                <select class="form-select" style="background-color: #000; border: 1px solid #333; color: #fff;">
-
-                    <option value="card">Mastercard</option>
-               <option value="card">Visa</option>
-
-                    <option value="applepay">Apple Pay</option>
-                </select>
-
-            </div>
-
-                <div class="col-12">
-                    <label class="form-label text-secondary mb-1" style="font-size: 0.85rem;">Message</label>
-                    <input required type="text" class="form-control"  placeholder="Leave a message of support" style="background-color: #000; border: 1px solid #333; color: #fff;">
-            </div>
-            </div> 
-
-        
-        <div class="mt-4">
-            <button type="submit" class="btn px-4" style="background: #fff; color: #000; font-weight: 500; border: none;">Subscribe Monthly</button>
-        </div>
-    </form>
+{% endif %}
     </div>
 
         </div>
 
         <br><br><br><br>
-
-    </body>
 
     <footer class="footer">
         <div class="container">
@@ -416,5 +370,6 @@
 
     </div>
 </footer>
-    
+
+    </body>
 </html>
