@@ -18,7 +18,7 @@ def admin_dashboard():
     # If the user is not logged in or does not have the 'Admin' role, return a 403 Forbidden response with an error message.
     if session.get('role') != 'Admin':
         return {"error": "Access denied. Admins only."}, 403
-    pending = models.get_pending_campaigns_with_creator() #Approval for Campaigns (includes creator username)
+    pending = models.get_all_campaigns_with_creator() #Approval for Campaigns (includes creator username)
     featured = models.get_featured_campaigns()
     flagged = models.get_flagged_campaigns()
     counts = models.gets_dashboard_counts() #the 4 stat cards
