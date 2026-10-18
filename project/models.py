@@ -81,7 +81,7 @@ def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin
         FROM campaign
     """)
     counts = cur.fetchone()
-    cur.execute("SELECT COUNT(*) AS users_pending FROM user WHERE verifiedStatus = FALSE") #creators who are not verfied yet are the "Users Pending"
+    cur.execute("SELECT COUNT(*) AS users_pending FROM creator WHERE verifiedStatus = FALSE") #creators who are not verfied yet are the "Users Pending"
     counts['users_pending'] = cur.fetchone()['users_pending']
     cur.close()
     return {key: int(value or 0) for key, value in counts.items()} #SUM() returns None on an empty table and a Decimal otherwise, so convert every value to a plain whole number
