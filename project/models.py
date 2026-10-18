@@ -77,7 +77,7 @@ def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin
         SELECT 
             SUM(status = 'Pending') AS pending, 
             SUM(status = 'Active') AS active, 
-            SUM(isFlagged = TRUE) AS flagged,
+            SUM(isFlagged = TRUE) AS flagged
         FROM campaign
     """)
     counts = cur.fetchone()
