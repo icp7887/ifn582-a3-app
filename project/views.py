@@ -1,3 +1,4 @@
+from werkzeug.security import check_password_hash
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from . import models
 from .forms import LoginForm
@@ -142,8 +143,24 @@ def toggle_flag(campaign_id, status):
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+    if form.validate_on_submit():
+        user = models.get_user_by_email(form.identifier.data)
+
+        # Passwords are stored hashed, so compare with check_password_hash
+        if (
+            user
+            and user.get('password')
+            and check_password_hash(user['password'], form.password.data)
+        ):
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            # Default to User if the account is not in the Admin table
+            session['role'] = user.get('role') or 'User'
+            return redirect(url_for('main.index'))
+
+        flash('Invalid email or password')
+
     return render_template('login.html', form=form, test_accounts=[])
-  
 
 
 #logout route
