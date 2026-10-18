@@ -1,0 +1,9 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container-fluid px-4 pt-3">
+        {% for category, msg in messages %}
+            <div class="alert alert-{{ 'secondary' if category == 'message' else category }}">{{ msg }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
