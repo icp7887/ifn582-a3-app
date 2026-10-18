@@ -188,3 +188,92 @@ def get_user_by_id(user_id):
     user = cur.fetchone()
     cur.close()
     return user
+
+
+# =====================================================================
+# ADMIN DASHBOARD + CAMPAIGN / USER MANAGEMENT
+# =====================================================================
+
+def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin page (Pending, Active, Flagged Items, Users Pending)
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            SUM(status = 'Pending') AS pending, 
+            SUM(status = 'Active') AS active, 
+            SUM(isFlagged = TRUE) AS flagged
+        FROM campaign
+    """)
+    counts = cur.fetchone()
+    cur.execute("SELECT COUNT(*) AS users_pending FROM creator WHERE verifiedStatus = FALSE") #creators who are not verfied yet are the "Users Pending"
+    counts['users_pending'] = cur.fetchone()['users_pending']
+    cur.close()
+    return {key: int(value or 0) for key, value in counts.items()} #SUM() returns None on an empty table and a Decimal otherwise, so convert every value to a plain whole number
+
+def get_all_campaigns_with_creator(): #for the Approval of Campains section: pending campaigns plus the creator's username for each card
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            c.*, c.title, c.category, u.username AS creatorName
+        FROM campaign c
+        JOIN user u ON c.creatorID = u.id
+        WHERE c.status = 'Pending'
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+def get_all_campaigns_with_details(): #for the Campaign Management and Featured sections: every campaign plus the creator's username and the amount raised
+    cur = mysql.connection.cursor()
+    #JOIN user gets the creator's username
+    #LEFT JOIN donation keeps camapaigns with no donations (they show 0 raised). Only donations with status 'Done' are counted 
+    cur.execute("""
+        SELECT 
+            c.*,
+            u.username AS creatorName,
+            COALESCE(SUM(d.amount), 0) AS amountRaised
+        FROM campaign c
+        JOIN user u ON c.creatorID = u.id
+        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+        GROUP BY c.id, u.username
+        ORDER BY c.id
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+def get_all_creators(): #for the User Management section and the Create Campaign drop down: every user with role 'Creator' plus their verified status
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            u.id, 
+            u.username, 
+            u.email, 
+            cr.verifiedStatus
+        FROM creator cr
+        JOIN user u ON cr.id = u.id
+        ORDER BY cr.verifiedStatus, u.username
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return rows    
+
+def create_campaign(title, goal_amount, start_date, end_date, creator_id, category, campiagn_image=None): #adds a new campaign with status 'Pending', so it still has to be approved
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        INSERT INTO campaign (title, goalAmount, startDate, endDate, creatorID, category, campaignImage, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending')
+    """, (title, goal_amount, start_date, end_date, creator_id, category, campiagn_image))
+    mysql.connection.commit() #save changes to the database
+    cur.close()
+
+def delete_campaign(campaign_id): #deletes a campaigN. ON DELETE CASCADE in the database schema ensures that all related donations are also deleted when a campaign is removed.
+  cur = mysql.connection.cursor()
+  cur.execute("DELETE FROM campaign WHERE id = %s", (campaign_id,))
+  mysql.connection.commit() #save changes to the database
+  cur.close()   
+
+def delete_user(user_id): #deletes a user. ON DELETE CASCADE also deletes thier creator/customer/admin row and, for a creator, all thier campaigns, tiers and the donationa to those campaiagns
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM user WHERE id = %s", (user_id,))
+    mysql.connection.commit() #save changes to the database
+    cur.close()

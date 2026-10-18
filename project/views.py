@@ -100,15 +100,20 @@ def admin_dashboard():
     # If the user is not logged in or does not have the 'Admin' role, return a 403 Forbidden response with an error message.
     if session.get('role') != 'Admin':
         return {"error": "Access denied. Admins only."}, 403
-    pending = models.get_pending_campaigns()
+    pending = models.get_all_campaigns_with_creator() #Approval for Campaigns (includes creator username)
     featured = models.get_featured_campaigns()
     flagged = models.get_flagged_campaigns()
-
+    counts = models.get_dashboard_counts() #the 4 stat cards
+    campaigns = models.get_all_campaigns_with_details()  #Campaign Management and Featured Campaigns
+    creators = models.get_all_creators()  #User Management and teh Create Campaign drop down 
     return render_template(
         'admin_dashboard.html',  #renders the admin_dashboard.html template and passes the fetched campaign data to it for display.
-        pending=pending,
-        featured=featured,
-        flagged=flagged
+        pending=pending, 
+        featured=featured, 
+        flagged=flagged,
+        counts=counts,
+        campaigns=campaigns,
+        creators=creators
     )
 
 
@@ -136,6 +141,39 @@ def toggle_feature(campaign_id, status):
 def toggle_flag(campaign_id, status):
     # Pass status (1 for True, 0 for False)
     models.set_campaign_flagged(campaign_id, bool(status))
+    return redirect(url_for('main.admin_dashboard'))
+
+
+@bp.route('/admin/create', methods=['POST']) #add a new campaign from the create campaign form on the admin dashboard. The form data is sent as a POST request, and the function extracts the relevant fields from the request to create a new campaign in the database.
+def admin_create_campaign():
+    if session.get('role') != 'Admin':
+        return {"error": "Access denied. Admins only."}, 403
+  #request.form holds values typed into the form, looked up by name attribute in the form fields. The function retrieves the values for title, description, goal amount, and creator ID from the form data and passes them to the create_campaign function in the models module to create a new campaign in the database.
+    models.create_campaign(
+            request.form['title'],
+            request.form['goalAmount'],
+            request.form['startDate'],
+            request.form['endDate'],
+            request.form['creatorID'],
+            request.form['category'],
+            request.form.get('campaignImage') or None #image is optional, so a empty box is saved as NULL
+        )
+    return redirect(url_for('main.admin_dashboard'))  #redirects the user back to the admin dashboard after successfully creating a new campaign.
+
+@bp.route('/admin/delete/<int:campaign_id>', methods=['POST']) #delete campaign
+def admin_delete_campaign(campaign_id):
+    if session.get('role') != 'Admin':
+        return {"error": "Access denied. Admins only."}, 403
+    models.delete_campaign(campaign_id)
+    return redirect(url_for('main.admin_dashboard'))
+
+@bp.route('/admin/delete_user/<int:user_id>', methods=['POST']) #delete user
+def admin_delete_user(user_id):
+    if session.get('role') != 'Admin':
+        return {"error": "Access denied. Admins only."}, 403
+    if user_id == session.get('user_id'): # Prevent admin from deleting their own account
+        return {"error": "You cannot delete your own account."}, 400
+    models.delete_user(user_id)
     return redirect(url_for('main.admin_dashboard'))
 
 
