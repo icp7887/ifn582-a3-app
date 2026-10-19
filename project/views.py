@@ -145,8 +145,6 @@ def login():
             </form>
         '''
 
-
-
 #logout route
 @bp.route('/logout')
 def logout():
