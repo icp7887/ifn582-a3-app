@@ -23,6 +23,8 @@
             <p class="text-secondary">Log in to your Superchat account</p>
         </div>
 
+        {% include '_flashes.html' %}
+
         <div class="card card-dark shadow-lg rounded-4 p-4 p-md-5 mb-4">
             <form method="post" novalidate>
                 {{ form.hidden_tag() }}

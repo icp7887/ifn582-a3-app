@@ -158,54 +158,101 @@ def set_campaign_flagged(campaign_id, is_flagged):
 
 
 # =====================================================================
-# USER FETCH FUNCTIONS
+# USERS + AUTH
 # =====================================================================
 
-def get_user_by_email(email):
+#a user's role comes from which table they are in: admin, creator, or customer (Supporter)
+_USER_WITH_ROLE = """
+    SELECT
+        u.id, u.username, u.password, u.email, u.isSuspended,
+        CASE WHEN a.id IS NOT NULL THEN 'Admin'
+             WHEN cr.id IS NOT NULL THEN 'Creator'
+             ELSE 'Customer' END AS role,
+        a.accessLevel,
+        cr.verifiedStatus
+    FROM user u
+    LEFT JOIN admin a ON a.id = u.id
+    LEFT JOIN creator cr ON cr.id = u.id
+"""
+
+
+def get_user_for_login(identifier): #login accepts either the username or the email
     cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT 
-            u.id, 
-            u.username, 
-            u.password, 
-            u.email, 
-            a.accessLevel AS role
-        FROM user u
-        LEFT JOIN admin a ON u.id = a.id
-        WHERE u.email = %s
-    """, (email,))
+    cur.execute(_USER_WITH_ROLE + " WHERE u.username = %s OR u.email = %s", (identifier, identifier))
     user = cur.fetchone()
     cur.close()
     return user
 
 
-def get_user_by_id(user_id):
+def get_user_by_id(user_id): #used on every request to load the logged-in user into g.user
     cur = mysql.connection.cursor()
-    cur.execute(
-        "SELECT * FROM user WHERE id = %s",
-        (user_id,)
-    )
+    cur.execute(_USER_WITH_ROLE + " WHERE u.id = %s", (user_id,))
     user = cur.fetchone()
     cur.close()
     return user
+
+
+def username_or_email_taken(username, email):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT username, email FROM user WHERE username = %s OR email = %s", (username, email))
+    rows = cur.fetchall()
+    cur.close()
+    return {
+        'username': any(r['username'].lower() == username.lower() for r in rows),
+        'email': any(r['email'].lower() == email.lower() for r in rows),
+    }
+
+
+def create_user(username, email, password_hash, role): #adds the user row plus their creator or customer row in one transaction
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute("INSERT INTO user (username, password, email) VALUES (%s, %s, %s)", (username, password_hash, email))
+        user_id = cur.lastrowid
+        if role == 'Creator':
+            cur.execute("INSERT INTO creator (id, verifiedStatus) VALUES (%s, FALSE)", (user_id,)) #new creators start unverified
+        else:
+            cur.execute("INSERT INTO customer (id) VALUES (%s)", (user_id,))
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        raise
+    finally:
+        cur.close()
+    return user_id
+
+
+def get_all_users(): #for the admin User Management section
+    cur = mysql.connection.cursor()
+    cur.execute(_USER_WITH_ROLE + " ORDER BY role, u.username")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def set_user_suspended(user_id, is_suspended): #suspended users cannot log in
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE user SET isSuspended = %s WHERE id = %s", (is_suspended, user_id))
+    mysql.connection.commit()
+    cur.close()
 
 
 # =====================================================================
 # ADMIN DASHBOARD + CAMPAIGN / USER MANAGEMENT
 # =====================================================================
 
-def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin page (Pending, Active, Flagged Items, Users Pending)
+def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin page (Pending, Active, Flagged Items, Users)
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
             SUM(status = 'Pending') AS pending, 
-            SUM(status = 'Active') AS active, 
-            SUM(isFlagged = TRUE) AS flagged
+            SUM(status = 'Active') AS active
         FROM campaign
     """)
     counts = cur.fetchone()
-    cur.execute("SELECT COUNT(*) AS users_pending FROM creator WHERE verifiedStatus = FALSE") #creators who are not verfied yet are the "Users Pending"
-    counts['users_pending'] = cur.fetchone()['users_pending']
+    cur.execute("SELECT COUNT(*) AS reports FROM report WHERE status = 'Open'") #open reports are the "Flagged Items"
+    counts['reports'] = cur.fetchone()['reports']
+    cur.execute("SELECT COUNT(*) AS users, SUM(isSuspended) AS suspended FROM user")
+    counts.update(cur.fetchone())
     cur.close()
     return {key: int(value or 0) for key, value in counts.items()} #SUM() returns None on an empty table and a Decimal otherwise, so convert every value to a plain whole number
 
@@ -277,3 +324,57 @@ def delete_user(user_id): #deletes a user. ON DELETE CASCADE also deletes thier 
     cur.execute("DELETE FROM user WHERE id = %s", (user_id,))
     mysql.connection.commit() #save changes to the database
     cur.close()
+
+
+# =====================================================================
+# ADMIN REPORTS + FEATURED
+# =====================================================================
+
+_REPORTS = """
+    SELECT r.*, c.title AS campaignTitle, c.status AS campaignStatus, u.username AS reporterName
+    FROM report r
+    JOIN campaign c ON c.id = r.campaignID
+    LEFT JOIN user u ON u.id = r.reporterID
+"""
+
+
+def get_open_reports():
+    cur = mysql.connection.cursor()
+    cur.execute(_REPORTS + " WHERE r.status = 'Open' ORDER BY r.reportedAt")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_reviewed_reports(limit=5):
+    cur = mysql.connection.cursor()
+    cur.execute(_REPORTS + " WHERE r.status <> 'Open' ORDER BY r.reviewedAt DESC LIMIT %s", (limit,))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_report_by_id(report_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM report WHERE id = %s", (report_id,))
+    row = cur.fetchone()
+    cur.close()
+    return row
+
+
+def set_report_status(report_id, status): #Resolved or Dismissed
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE report SET status = %s, reviewedAt = NOW() WHERE id = %s", (status, report_id))
+    mysql.connection.commit()
+    cur.close()
+
+
+def set_featured_campaigns(campaign_ids): #only the ticked Active campaigns stay featured
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE campaign SET isFeatured = FALSE")
+    if campaign_ids:
+        placeholders = ', '.join(['%s'] * len(campaign_ids))
+        cur.execute("UPDATE campaign SET isFeatured = TRUE WHERE status = 'Active' AND id IN (" + placeholders + ")", tuple(campaign_ids))
+    mysql.connection.commit()
+    cur.close()
+
