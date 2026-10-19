@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
     <title> SuperChats | Admin </title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
@@ -10,7 +9,6 @@
         </head>
 
         <body class="dashboard-page">
-
         <nav class="navbar bg-white border-bottom">
         
         <div class="container-fluid">
@@ -36,25 +34,24 @@
 
         </nav>
             
-
+<!---------------- STAT CARDS --------------->
         <div class="container-fluid px-4 py-4" style="max-width: 1200px;">
 
             <h1 class="fontLook">Admin Dashboard</h1>
         <p class = "description">Change or delete fundraising events and see flagged content</p>
-
             <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
                     <div class="col">
 
                         <div class="card text-center p-3 h-100">
 
-                        <p class="number">4</p>
+                        <p class="number">{{ counts.pending }}</p>
                         <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Pending </p>
                     </div>
                 </div>
 
                 <div class="col">
                     <div class="card text-center p-3 h-100">
-                        <p class="number">3</p>
+                        <p class="number">{{ counts.active }}</p>
                     <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Active</p>
                 </div>
             </div>
@@ -62,291 +59,225 @@
             <div  class="col">
 
                 <div style = " border: 2px red solid;" class="card text-center p-3 h-100">
-                    <p style = "color:red" class="number">2</p>
+                    <p style = "color:red" class="number">{{ counts.flagged }}</p>
 
                     <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Flagged Items</p>
 
             </div>
         </div>
-
-
                 <div class="col">
                     <div class="card text-center p-3 h-100">
-                        <p class="number">1</p>
-                            <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Users Pending</p>
+                        <p class="number">{{ campaigns | selectattr('status', 'equalto', 'Rejected')| list | length}}</p>
+                            <p style=" font-weight: 300; font-size: 1.5rem; " class="form-label">Rejected</p>
                         </div>
 
 
                     </div>
                 </div>
 
-                <div  style = " border: 3px green solid;"  class="card p-4 mb-4">
-                <h2 class="titleLook">Approval of Campaigns</h2>
-                <p style=" font-weight: 300; font-size: 1.5rem; " >Here is where you can approve and decline campaigns</p>
+<!---------------- APPROVAL OF CAMPAIGNS --------------->
 
-            <div class="row row-cols-1 row-cols-md-2 g-3">
+    <div  style = " border: 3px green solid;"  class="card p-4 mb-4">
+        <h2 class="titleLook">Approval of Campaigns</h2>
+        <p style=" font-weight: 300; font-size: 1.5rem; ">Campaigns that have been approved and are live</p>
 
-                    <div class="col">
-                        <div class="card h-100 p-3" style=" font-weight: 300; font-size: 1.3rem;">
-                            <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">Health Tech</h3>
-                            <div class="row p text-muted g-2 mb-3">
-
-                                <div class="col-6"><strong class="d-block text-dark">Creator</strong>MKBHD</div>
-                            <div class="col-6"><strong class="d-block text-dark">Category</strong>Tech</div>
-
-
-                        </div>
-                         <div class="d-flex gap-2 justify-content-between">
-                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                        <button class="btn btn-success btn-sm">Approve</button>
-
-                                
-                                    </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="card h-100 p-3"  style=" font-weight: 300; font-size: 1.3rem;">
-                        <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">Music Album</h3>
-                            <div class="row p text-muted g-2 mb-3">
-                            <div class="col-6"><strong class="d-block text-dark">Creator</strong>Drake</div>
-
-                            <div class="col-6"><strong class="d-block text-dark">Category</strong>Music</div>
-
-                        </div>
-                       <div class="d-flex gap-2 justify-content-between">
-                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                        <button class="btn btn-success btn-sm">Approve</button>
-
-                                
-                                    </div>
-                            </div>
-                        </div>
-                        <div class="col">
-                        <div class="card h-100 p-3" style=" font-weight: 300; font-size: 1.3rem;">
-
-                            <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">All-In Summit</h3>
-                            <div class="row p text-muted g-2 mb-3">
-                                <div class="col-6"><strong class="d-block text-dark">Creator</strong>All-In Podcast</div>
-
-                                    <div class="col-6"><strong class="d-block text-dark">Category</strong>Podcasts</div>
-
-                                </div>
-                                    <div class="d-flex gap-2 justify-content-between">
-                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                        <button class="btn btn-success btn-sm">Approve</button>
-
-
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="card h-100 p-3" style=" font-weight: 300; font-size: 1.3rem;">
-                                    <h3 class="text-muted"  style=" font-weight: 300; font-size: 1.7rem;">Water Project</h3>
-                                    <div class="row p text-muted g-2 mb-3">
-                                        <div class="col-6"><strong class="d-block text-dark">Creator</strong>Niko Omilana</div>
-
-                                        <div class="col-6"><strong class="d-block text-dark">Category</strong>Podcasts</div>
-                                        
-                                    </div>
-                                         <div class="d-flex gap-2 justify-content-between">
-                                            <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                        <button class="btn btn-success btn-sm">Approve</button>
-
-                                
-                                    </div>
-                                    </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                <div style = " border: 3px green solid;" class="card p-4 mb-4">
-                    <h2 class="titleLook">Campaign Management</h2>
-                <p style=" font-weight: 300; font-size: 1.5rem;">Edit and change campaign details</p>
-
-                    <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
-                    <div class="col">   
-                    <div class="card h-100 p-3">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h3 style=" font-weight: 300; font-size: 1.7rem;">The Water Project</h3>
-                        <span class="badge bg-success">Active</span>
-                    </div>
-                    <div class="p text-muted mb-3">Niko Omilana - $2,600 raised</div>
-                    <div class="d-flex flex-wrap gap-2">
-                               <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                    
-                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
-                                    
-                            </div>
-                    </div>
-                </div>
-                <div class="col">
-                            <div class="card h-100 p-3">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h3 style=" font-weight: 300; font-size: 1.7rem;">Album cover art</h3>
-                                    <span class="badge bg-warning text-dark">Paused</span>
-                                </div>
-                                <div class="p text-muted mb-3">Drake - $70,000 raised</div>
-                                <div class="d-flex flex-wrap gap-2">
-
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                    
-                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
-
-                                </div>
-                                </div>
-                            </div>
-                            <div class="col">
-                            <div class="card h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h3 style=" font-weight: 300; font-size: 1.7rem;">India Fund</h3>
-                                    <span class="badge bg-secondary">Suspend</span>
-                                </div>
-                                <div class="p text-muted mb-3">Joe Fazer - $26 raised</div>
-                                
-                                    <div class="d-flex flex-wrap gap-2">
-
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                    
-                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
-                            </div>
-                        </div>
-                </div>
-            </div>
-        </div>
-
-            <div style = " border: 3px green solid;" class="card p-4 mb-4">
-            <h2 class="titleLook">User Management</h2>
-                <p style=" font-weight: 300; font-size: 1.5rem;">Make sure users comply with your terms</p>
-
-                    <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
-                        <div class="col">
-                            <div class="card h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h3 style=" font-weight: 300; font-size: 1.7rem;">MKBHD</h3>
-
-                                <span class="badge bg-warning text-dark">Pending</span>
-                            </div>  
-
-                                <div class="p text-muted mb-3">mkbhd@gmail.com - Creator</div>
-                                <div class="d-flex flex-wrap gap-2">
-
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                    <button class="btn btn-success btn-sm">Approve</button>
-                                    
-                                    <button class="btn btn-outline-secondary btn-sm">Edit</button>
-                                </div>
-                            </div>
-                    </div>
-                    <div class="col">
-
-                    <div class="card h-100 p-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-
-
-                            <h3 style=" font-weight: 300; font-size: 1.7rem;">Niko Omilana</h3>
-                            <span class="badge bg-success">Active</span>
-                        </div>
-
-
-                        <div class="p text-muted mb-3">niko@gmail.com - Creator</div>
-
-
-                        <div class="d-flex flex-wrap gap-2">
-                                <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                <button class="btn btn-success btn-sm">Approve</button>
-                                <button class="btn btn-outline-secondary btn-sm">Edit</button>
-                                    
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </div>
-
-        <div style = " border: 3px red solid;" class="card p-4 mb-4">
-                <h2 class="titleLook">Flagged Content</h2>
-                <p style=" font-weight: 300; font-size: 1.5rem;">Review and remove red flagged content</p>
-
-            <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
-
-                <div class="col">
-                    <div class="card h-100 p-3">    
-                            <h3 style=" font-weight: 300; font-size: 1.7rem;">Comment on "Water Project"</h3>
-                            <div class="p mb-3"><strong>Crypto - Spam</strong></div>
-                        <div class="d-flex flex-wrap gap-2">
-
-                                <button class="btn btn-outline-secondary btn-sm">Ban</button>
-
-                                    <button class="btn btn-outline-danger btn-sm">Remove</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                    <div class="card h-100 p-3">
-                        <h3 style="font-weight: 300; font-size: 1.7rem;">Campaign description</h3>
-                        <div class="p mb-3"><strong>Tour Fund - Misleading fundraising goal</strong></div>
-                            <div class="d-flex flex-wrap gap-2">
-
-
-
-                            <button class="btn btn-outline-secondary btn-sm">Ban</button>
-
-                            <button class="btn btn-outline-danger btn-sm">Remove</button>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-                </div>
-
-            <div class="card p-3 p-md-5" style="border: 3px green solid">
-        <h2 class="titleLook">Featured Campaigns</h2>
-        <p style="font-weight: 300; font-size: 1.5rem;">Showcase the very best on the home page for all to see</p>
-
-    <form>
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3" style="font-weight: 300; font-size: 1.3rem;">
-
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for campaign in campaigns if campaign.status== 'Active' and not campaign.isFlagged%}
             <div class="col">
-                <div class="card p-3 p-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" checked>
-                            
-                            <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">Drake</label>
+            <div class="card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                <h3 style=" font-weight: 300; font-size: 1.7rem;">{{ campaign.title }}</h3>
+                    <div class="d-flex gap-1">
+                    {% if campaign.status == 'Active' %}
+                    <span class="badge bg-success">Active</span>
+                    {% elif campaign.status == 'Pending' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif campaign.status == 'Rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ campaign.status }}</span>
+                    {% endif %}
+                        {% if campaign.isFlagged %}
+                            <span class="badge bg-danger">Flagged</span>
+                    {% endif %}
+                        </div>
                     </div>
-                </div>
-            </div>
+                <p class="text-muted mb-3">
+                {{ campaign.creatorName }} - ${{ '{:,.2f}'.format(campaign.amountRaised) }} raised
+                of ${{ '{:,.2f}'.format(campaign.goalAmount) }}
+                </p>
+    <div class="d-flex flex-wrap gap-2">
 
-            <div class="col">
-                <div class="card p-3 p-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" checked>
-                        <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">All-in Podcast</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card p-3 p-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox">
-                        <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">Emma Raducanu</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card p-3 p-md-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" checked>
-                        <label class="form-check-label" style="font-weight: 700; font-size: 1.7rem;">MKBHD</label>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <button type="submit" class="btn btn-success">Save</button>
+    <form method="POST" action="{{ url_for('main.reject_campaign', campaign_id=campaign.id) }}">
+        <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
     </form>
-</div>
-    </body>
+    <form method="POST" action="{{ url_for('main.admin_delete_campaign', campaign_id=campaign.id) }}"
+        onsubmit="return confirm('Are you sure you want to DELETE this campaign?');">
+        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+    </form>
+         </div>
+        </div>
+     </div>
+        {% else %}
+        <p class="text-muted"> No appoved campaigns yet.</p>
+        {% endfor %}
+            </div>
+        </div>     
 
+<!--------------------CAMPAIGN MANAGEMENT---------------->                
+    <div style = " border: 3px green solid;" class="card p-4 mb-4">
+        <h2 class="titleLook">Campaign Management</h2>
+        <p style=" font-weight: 300; font-size: 1.5rem;">Approve, flag or detele campaigns waiting for review</p>
+
+    <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
+        {% for campaign in campaigns if campaign.status !='Active' and not campaign.isFlagged %}
+            <div class="col">   
+                <div class="card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 style=" font-weight: 300; font-size: 1.7rem;">{{ campaign.title }}</h3>
+                    <div class="d-flex gap-1">
+                        {%if campaign.status == 'Active' %}
+                        <span class="badge bg-success">Active</span>
+                        {% elif campaign.status == 'Pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif campaign.status == 'Rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ campaign.status }}</span>
+                        {% endif %}
+                        {% if campaign.isFlagged %}
+                        <span class="badge bg-danger">Flagged</span>
+                        {% endif %}
+                    </div>
+                    </div>
+                    <div class="text-muted mb-3">
+                    {{ campaign.creatorName}} - ${{ '{:,.2f}'.format(campaign.amountRaised) }} raised of ${{ '{:,.2f}' .format(campaign.goalAmount) }}
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+            <form method="POST" action="{{ url_for('main.approve_campaign', campaign_id=campaign.id) }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Approve</button>
+            </form>
+            <form method="POST" action="{{ url_for('main.toggle_flag', campaign_id=campaign.id, status=1) }}">
+                <button type="submit" class="btn btn-outline-warning btn-sm">Flag</button>
+            </form>
+            <form method="POST" action="{{ url_for('main.admin_delete_campaign', campaign_id=campaign.id) }}"
+            onsubmit="return confirm('Are you sure you want to DELETE this campaign?');">
+        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+    </form>
+    </div>
+    </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No campaigns waiting for review</p>
+    {% endfor %}
+    </div>
+</div>
+
+ <!------- USER MANAGEMENT ------>        
+    <div style = " border: 3px green solid;" class="card p-4 mb-4">
+        <h2 class="titleLook">User Management</h2>
+        <p style=" font-weight: 300; font-size: 1.5rem;">Make sure users comply with your terms</p>
+            <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
+            {% for creator in creators %}
+        <div class="col">
+        <div class="card h-100 p-3">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h3 style=" font-weight: 300; font-size: 1.7rem;">{{ creator.username }}</h3>
+                {% if creator.verifiedStatus %}
+                    <span class="badge bg-success text-dark">Verified</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                            </div> 
+        <div class="p text-muted mb-3">{{ creator.email}} - Creator</div>
+        <div class="d-flex flex-wrap gap-2">
+                <form method="POST" action="{{ url_for('main.admin_delete_user', user_id=creator.id)}}"
+                onsubmit="return confirm('Are you sure your want to DELETE this creator?');">
+                     <button class="btn btn-outline-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% else %}
+    <p class="text-muted">No creators found.</p>
+    {% endfor %}
+    </div>
+</div>
+
+<!------------------------FLAGGED CAMPAIGNS---------------------------------->
+
+    <div style = " border: 3px red solid;" class="card p-4 mb-4">
+        <h2 class="titleLook">Flagged Content</h2>
+        <p style=" font-weight: 300; font-size: 1.5rem;">Review and remove red flagged content</p>
+    <div class="row row-cols-1 row-cols-md-2 g-3" style=" font-weight: 300; font-size: 1.3rem;">
+        {% for campaign in campaigns if campaign.isFlagged %}
+            <div class="col">
+                <div class="card h-100 p-3">    
+                <h3 style=" font-weight: 300; font-size: 1.7rem;">{{ campaign.title}}</h3>
+                <div class="d-flex gap-1">
+                    {% if campaign.status =='Active' %}
+                        <span class="badge bg-success">Active</span>
+                    {% elif campaign.status =='Pending' %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% elif campaign.status =='Rejected' %}
+                        <span class="badge bg-danger">Rejected</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ campaign.status }}</span>
+                    {% endif %}
+                    {% if campaign.isFlagged %}
+                        <span class="badge bg-danger">Flagged</span>
+                    {% endif %}
+                </div>
+                <div class="p text-muted mb-3">
+                    {{ campaign.creatorName}} -${{ '{:,.2f}'.format(campaign.amountRaised) }} raised of ${{ '{:,.2f}'.format(campaign.goalAmount) }}
+                </div>
+        <div class="d-flex flex-wrap gap-2">
+            <form method="POST" action="{{ url_for('main.reject_campaign', campaign_id=campaign.id) }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Ban</button>
+            </form>
+            <form method="POST" action="{{ url_for('main.toggle_flag', campaign_id=campaign.id, status=0) }}">
+                <button type="submit" class="btn btn-outline-success btn-sm">Dismiss</button>
+            </form>
+            <form method="POST" action="{{ url_for('main.reject_campaign', campaign_id=campaign.id) }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Reject</button>
+            </form>
+                    </div>
+                 </div>
+            </div>
+            {% else %}
+            <p class="text-muted">Nothing is flagged right now.</p>
+            {% endfor %}
+        </div>
+    </div>
+<!---------------------------FEATURED CAMPAIGNS--------------------------->
+<div class="card p-3 p-md-5" style="border: 3px green solid">
+    <h2 class="titleLook">Featured Campaigns</h2>
+    <p style="font-weight: 300; font-size: 1.5rem;">Showcase the very best on the home page for all to see</p>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3" style="font-weight: 300; font-size: 1.3rem;">
+        {% for campaign in campaigns %}
+            <div class="col">
+            <div class="card p-3 p-md-4 h-100 {%if campaign.isFeatured %}border-success{% endif %}">
+            <form method="POST" action="{{ url_for('main.toggle_feature', campaign_id=campaign.id, status=0 if campaign.isFeatured else 1) }}">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="feature-{{ campaign.id }}"
+                {% if campaign.isFeatured %}checked{% endif %} onchange="this.form.submit()">
+                <label class="form-check-label" for="feature-{{ campaign.id}}" style="font-weight: 700; font-size: 1.3rem;">
+                     {{campaign.title}}
+                </label>
+            <div class="text-muted" style="font-size: 1rem;">
+                {{ campaign.creatorName}} - {{ 'Featured' if campaign.isFeatured else 'Not featured'}}
+            </div>
+            </div>
+            </form>
+            </div>
+            </div>
+            {% else %}
+            <p class="text-muted"> No campaigns yet.</p>
+            {% endfor %}
+        </div>
+        <p class="text-muted mb-0" style="font-size: 1rem;">Switch on as many as you like. Each change saves straight away and updates the home page</p>
+    </div>
+    </div>
+    
+</body>
 </html>
