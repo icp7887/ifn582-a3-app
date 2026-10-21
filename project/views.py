@@ -13,8 +13,6 @@ bp = Blueprint('main', __name__)
 
 @bp.before_app_request
 def load_logged_in_user():
-    # Only the user id is kept in the session; the role is read from the database on every request,
-    # so a suspension or role change takes effect straight away
     user_id = session.get('user_id')
     g.user = models.get_user_by_id(user_id) if user_id else None
     if g.user and g.user['isSuspended']:
@@ -48,10 +46,10 @@ admin_required = role_required('Admin')
 creator_required = role_required('Creator')
 
 
-def _safe_next(target): #only follow ?next= links that stay on this site
-    if target and target.startswith('/') and not target.startswith('//'):
-        return target
-    return None
+# def _safe_next(target): #only follow ?next= links that stay on this site
+#     if target and target.startswith('/') and not target.startswith('//'):
+#         return target
+#     return None
 
 
 # =====================================================================
@@ -166,9 +164,10 @@ def index():
 # DONATION
 # =====================================================================
 
-@bp.route('/donation.html')
+@bp.route('/donation/01')
 def donation_page():
-    return render_template('donation.html')
+    campaign = models.get_campaign_by_id(1)
+    return render_template('donation.html', campaign=campaign)
 
 
 @bp.route('/donation/<int:campaign_id>')
