@@ -136,21 +136,21 @@ INSERT INTO customer (id, paymentMethod, dateSubscribed, subscribedTierID) VALUE
 	(5, 'Mastercard', '2027-01-04 00:00:00', 4);
     
 INSERT INTO campaign (id, title, goalAmount, status, campaignImage, startDate, endDate, isFeatured, isFlagged, creatorID, category) VALUES
-	(1, 'Water Project', 10000.00, 'Active', 'https://images.unsplash.com/photo-1538300342682-cf57afb97285?w=800&q=70&auto=format&fit=crop', '2027-01-07 00:00:00', '2027-02-07 00:00:00', TRUE, FALSE, 10, 'Community'),
-	(2, 'Music Album', 50000.00, 'Active', 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&q=70&auto=format&fit=crop', '2027-01-07 00:00:00', '2027-02-07 00:00:00', TRUE, FALSE, 6, 'Arts'),
-	(3, 'All-in Summit', 500.00, 'Pending', 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=70&auto=format&fit=crop', '2027-01-07 00:00:00', '2027-02-07 00:00:00', TRUE, FALSE, 7, 'Technology'),
-	(4, 'VR Glasses', 3000.00, 'Pending', 'https://images.unsplash.com/photo-1593508512255-86ab42a8e620?w=800&q=70&auto=format&fit=crop', '2027-01-07 00:00:00', '2027-02-07 00:00:00', FALSE, TRUE, 8, 'Technology'),
-	(5, 'India Fund', 2000.00, 'Pending', 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=70&auto=format&fit=crop', '2027-01-07 00:00:00', '2027-02-07 00:00:00', FALSE, TRUE, 9, 'Community'),
-	(6, 'School Supplies Drive', 7500.00, 'Active', 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=70&auto=format&fit=crop', '2027-01-08 00:00:00', '2027-02-08 00:00:00', FALSE, FALSE, 6, 'Education'),
-	(7, 'Community Food Relief', 12000.00, 'Active', 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&q=70&auto=format&fit=crop', '2027-01-08 00:00:00', '2027-02-08 00:00:00', FALSE, FALSE, 7, 'Community'),
-	(8, 'Rural Education Fund', 8500.00, 'Active', 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=70&auto=format&fit=crop', '2027-01-09 00:00:00', '2027-02-09 00:00:00', FALSE, FALSE, 8, 'Education'),
-	(9, 'Youth Sports Program', 9000.00, 'Active', 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70&auto=format&fit=crop', '2027-01-09 00:00:00', '2027-02-09 00:00:00', FALSE, FALSE, 9, 'Community'),
-	(10, 'Clean Water Initiative', 15000.00, 'Active', 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=800&q=70&auto=format&fit=crop', '2027-01-10 00:00:00', '2027-02-10 00:00:00', FALSE, FALSE, 10, 'Community'),
-	(11, 'Local Arts Festival', 6000.00, 'Active', 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=70&auto=format&fit=crop', '2027-01-10 00:00:00', '2027-02-10 00:00:00', FALSE, FALSE, 6, 'Arts'),
-	(12, 'Medical Support Fund', 13000.00, 'Active', 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=70&auto=format&fit=crop', '2027-01-11 00:00:00', '2027-02-11 00:00:00', FALSE, FALSE, 7, 'Health'),
-	(13, 'Digital Learning Project', 11000.00, 'Active', 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=70&auto=format&fit=crop', '2027-01-11 00:00:00', '2027-02-11 00:00:00', FALSE, FALSE, 8, 'Technology'),
-	(14, 'Community Garden', 6500.00, 'Active', 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&q=70&auto=format&fit=crop', '2027-01-12 00:00:00', '2027-02-12 00:00:00', FALSE, FALSE, 9, 'Community'),
-	(15, 'Emergency Relief Fund', 10000.00, 'Active', 'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&q=70&auto=format&fit=crop', '2027-01-12 00:00:00', '2027-02-12 00:00:00', FALSE, FALSE, 10, 'Community');
+	(1, 'Water Project', 10000.00, 'Active', 'img/water project.jpg', '2027-01-07 00:00:00', '2027-02-07 00:00:00', TRUE, FALSE, 10, 'Community'),
+	(2, 'Music Album', 50000.00, 'Active', 'img/music album.jpg', '2027-01-07 00:00:00', '2027-02-07 00:00:00', TRUE, FALSE, 6, 'Arts'),
+	(3, 'All-in Summit', 500.00, 'Pending', 'img/all-in summit.jpg', '2027-01-07 00:00:00', '2027-02-07 00:00:00', TRUE, FALSE, 7, 'Technology'),
+	(4, 'VR Glasses', 3000.00, 'Pending', 'img/vr glasses.jpg', '2027-01-07 00:00:00', '2027-02-07 00:00:00', FALSE, TRUE, 8, 'Technology'),
+	(5, 'India Fund', 2000.00, 'Pending', 'img/india fund.jpg', '2027-01-07 00:00:00', '2027-02-07 00:00:00', FALSE, TRUE, 9, 'Community'),
+	(6, 'School Supplies Drive', 7500.00, 'Active', 'img/school supplies drive.jpg', '2027-01-08 00:00:00', '2027-02-08 00:00:00', FALSE, FALSE, 6, 'Education'),
+	(7, 'Community Food Relief', 12000.00, 'Active', 'img/community food relief.jpg', '2027-01-08 00:00:00', '2027-02-08 00:00:00', FALSE, FALSE, 7, 'Community'),
+	(8, 'Rural Education Fund', 8500.00, 'Active', 'img/rural education fund.jpg', '2027-01-09 00:00:00', '2027-02-09 00:00:00', FALSE, FALSE, 8, 'Education'),
+	(9, 'Youth Sports Program', 9000.00, 'Active', 'img/youth sports program.jpg', '2027-01-09 00:00:00', '2027-02-09 00:00:00', FALSE, FALSE, 9, 'Community'),
+	(10, 'Clean Water Initiative', 15000.00, 'Active', 'img/clean water initiative.jpg', '2027-01-10 00:00:00', '2027-02-10 00:00:00', FALSE, FALSE, 10, 'Community'),
+	(11, 'Local Arts Festival', 6000.00, 'Active', 'img/local arts festival.jpg', '2027-01-10 00:00:00', '2027-02-10 00:00:00', FALSE, FALSE, 6, 'Arts'),
+	(12, 'Medical Support Fund', 13000.00, 'Active', 'img/medical support fund.jpg', '2027-01-11 00:00:00', '2027-02-11 00:00:00', FALSE, FALSE, 7, 'Health'),
+	(13, 'Digital Learning Project', 11000.00, 'Active', 'img/digital learning project.jpg', '2027-01-11 00:00:00', '2027-02-11 00:00:00', FALSE, FALSE, 8, 'Technology'),
+	(14, 'Community Garden', 6500.00, 'Active', 'img/community garden.jpg', '2027-01-12 00:00:00', '2027-02-12 00:00:00', FALSE, FALSE, 9, 'Community'),
+	(15, 'Emergency Relief Fund', 10000.00, 'Active', 'img/emergency relief fund.jpg', '2027-01-12 00:00:00', '2027-02-12 00:00:00', FALSE, FALSE, 10, 'Community');
     
 INSERT INTO donation (transactionID, amount, paymentNetwork, transactionDate, status, customerID, campaignID) VALUES
 	(1, 26.00, 'Mastercard', '2027-01-01 00:00:00', 'Done', 1, 1),
@@ -166,8 +166,7 @@ INSERT INTO campaign_post (id, campaignID, title, content, postDate) VALUES
     
 ALTER TABLE user CHANGE COLUMN passwordHASH password VARCHAR(250);
 
-#passwords are stored as PBKDF2-SHA256 hashes (werkzeug generate_password_hash).
-#plain-text test passwords are listed on the login page.
+#to change passwords and store them as hashes from werkzeug module
 UPDATE user SET password = 'pbkdf2:sha256:260000$9IyzriilVOAJ2LX8$6d4d3d136eab370dc43967769cc39bbe079881ad838bb6a8304d10935d434c38' WHERE id = 1;
 UPDATE user SET password = 'pbkdf2:sha256:260000$krIPJoPYSSeBHDCt$85f63500a1fd01ab74e80ce3e459473bac1fc38fb04b6a3cf612534ea13b4a46' WHERE id = 2;
 UPDATE user SET password = 'pbkdf2:sha256:260000$nNK3uHsBWWcZcgKw$c52553f5a03b5d32ec9c83163ac2759a3812b45f9e20923de33d4db8f06b3e14' WHERE id = 3;
@@ -184,11 +183,11 @@ UPDATE user SET password = 'pbkdf2:sha256:260000$zWzSV1mmGDaDsNvD$b53e99fb23af13
 UPDATE user SET password = 'pbkdf2:sha256:260000$VsLxWqOHemXc4cFb$e32e30e31ea4e94441e6310349bc3b5764cc9357edbc40b218d83b59f339d369' WHERE id = 14;
 UPDATE user SET password = 'pbkdf2:sha256:260000$EVl6b1QhApamoGQ9$47ae7214897142974f2333120ecbf3cae45f9bcaa9bb9b261a743386e2c16dfc' WHERE id = 15;
 
-#CAMPAIGN DETAIL PAGE ADDITIONS
-#campaign description (fundraising purpose and goals)
+#CAMPAIGN DETAIL TABLE ADDITIONS
+#campaign description
 ALTER TABLE campaign ADD COLUMN description TEXT AFTER title;
 
-#donor details captured by the donation form (A1 design: full name, address, email, tier, payment method, message)
+#additional donor details captured by the donation form
 ALTER TABLE donation
     ADD COLUMN donorName VARCHAR(100) NOT NULL DEFAULT '' AFTER amount,
     ADD COLUMN donorEmail VARCHAR(100) AFTER donorName,
@@ -197,6 +196,7 @@ ALTER TABLE donation
     ADD COLUMN tierID INT AFTER message,
     ADD FOREIGN KEY (tierID) REFERENCES subscriptionTier(id) ON DELETE SET NULL ON UPDATE CASCADE; #SET NULL keeps the donation if a tier is removed
 
+#seed description to campaign
 UPDATE campaign SET description = 'Building wells in rural communities so families have safe drinking water close to home. Every $500 funds a hand pump that serves around 200 people.' WHERE id = 1;
 UPDATE campaign SET description = 'Funding the recording, mixing and cover art for an independent album, with early access and behind-the-scenes sessions for supporters.' WHERE id = 2;
 UPDATE campaign SET description = 'Covering venue and travel costs for a free community tech summit with live podcast recordings and founder Q&A sessions.' WHERE id = 3;
@@ -262,10 +262,10 @@ INSERT INTO campaign_post (campaignID, title, content, postDate) VALUES
 
 
 #ADMIN DASHBOARD ADDITIONS
-#suspended accounts cannot log in (new registrations do not need approval, so there is no "pending" user state)
+#suspended accounts cannot log in
 ALTER TABLE user ADD COLUMN isSuspended BOOLEAN NOT NULL DEFAULT FALSE;
 
-#content reported as inappropriate or misleading. Sample reports are added here by hand (no public reporting form)
+#create a report table to handle reported content
 create table report(
     id INT AUTO_INCREMENT PRIMARY KEY,
     campaignID INT NOT NULL,
@@ -279,6 +279,7 @@ create table report(
     foreign key(reporterID) references user(id) on delete set null on update cascade
 );
 
+#seed into report table
 INSERT INTO report (campaignID, reporterID, reason, details, status, reportedAt, reviewedAt) VALUES
 	(5, 1, 'Misleading fundraising goal', 'The goal amount does not match what the description says the money is for.', 'Open', '2027-01-09 10:00:00', NULL),
 	(1, 3, 'Spam in comments', 'Supporter message on Water Project is advertising a crypto giveaway.', 'Open', '2027-01-12 15:30:00', NULL),
@@ -287,22 +288,22 @@ INSERT INTO report (campaignID, reporterID, reason, details, status, reportedAt,
 
 
 #CREATOR DASHBOARD ADDITIONS
-#optional image on a campaign update (uploaded files are saved under static/img/uploads/)
+#optional image on a campaign update
 ALTER TABLE campaign_post ADD COLUMN postImage VARCHAR(255) AFTER content;
-#campaign status values used by the app: Pending, Active, Paused, Closed (set by the creator once approved),
-#Rejected and Suspended (set by an admin only)
 
 
-#FEATURED SECTION: creator photo + tagline shown on the homepage "Today's Top Featured" cards
+
+#add additional columns to creator for the featured section
 ALTER TABLE creator
     ADD COLUMN tagline VARCHAR(150) AFTER bio,
     ADD COLUMN profileImage VARCHAR(255) AFTER tagline;
 
-UPDATE creator SET tagline = 'Experience behind the scenes', profileImage = 'https://upload.wikimedia.org/wikipedia/en/4/46/Drake_-_Toosie_Slide.png' WHERE id = 6;
-UPDATE creator SET tagline = 'Chat with besties on the pod', profileImage = 'https://cdn.prod.website-files.com/633cd7641794e536812c0e29/66dd7f9c930b82790d33fefc_Copy_of_All-In_Logos_3_600x.png' WHERE id = 7;
-UPDATE creator SET tagline = 'More reviews on latest technology', profileImage = 'https://i.ytimg.com/vi/idEAABFzpfg/maxresdefault.jpg' WHERE id = 8;
-UPDATE creator SET tagline = 'Philanthropy at the biggest scale', profileImage = 'https://mrbeast.store/cdn/shop/files/Hero-Desktop.png?v=1762185908&width=1200' WHERE id = 9;
-UPDATE creator SET tagline = 'Storytelling with a purpose', profileImage = 'https://shopndl.com/cdn/shop/files/1Q4A2840.jpg?v=1762270409&width=1200' WHERE id = 10;
+#seed creator info for featured section
+UPDATE creator SET tagline = 'Experience behind the scenes', profileImage = 'img/drake.jpg' WHERE id = 6;
+UPDATE creator SET tagline = 'Chat with besties on the pod', profileImage = 'img/all-in.jpg' WHERE id = 7;
+UPDATE creator SET tagline = 'More reviews on latest technology', profileImage = 'img/mkbhd.jpg' WHERE id = 8;
+UPDATE creator SET tagline = 'Philanthropy at the biggest scale', profileImage = 'img/mrbeast.jpg' WHERE id = 9;
+UPDATE creator SET tagline = 'Storytelling with a purpose', profileImage = 'img/niko.jpg' WHERE id = 10;
 
-#homepage "Today's Top Featured": Drake (Music Album), All-In (Community Food Relief), MKBHD (Digital Learning Project)
+#initial setting for featured campaigns
 UPDATE campaign SET isFeatured = (id IN (2, 7, 13));

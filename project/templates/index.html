@@ -64,7 +64,7 @@
 
     <header class="front">
         <img class="frontImg" style="transform: scaleX(-1);"
-            src="https://mrbeast.store/cdn/shop/files/Hero-Desktop.png?v=1762185908&width=3840">
+            src="{{ url_for('static', filename='img/mrbeast.jpg') }}" alt="Mr Beast Philanthropy">
 
         <div class="frontOverlay">
             <div class="frontContent">
@@ -136,7 +136,7 @@
                             <p class="card-text">{{ f.creatorTagline or f.title }}</p>
                         </div>
 
-                        <img src="{{ fimg if fimg.startswith('http') else url_for('static', filename='img/' ~ fimg) }}"
+                        <img src="{{ fimg if fimg.startswith('http') else url_for('static', filename=fimg) }}"
                             class="card-img-top" alt="{{ f.creatorName }}">
 
                         <div class="card-body">
@@ -207,7 +207,7 @@
                 <a href="{{ url_for('main.campaign_donation', campaign_id=campaign.id) }}" class="card campaign-card h-100 text-decoration-none">
                     <div class="campaign-img-wrap">
                         <img class="campaign-img" loading="lazy" alt="{{ campaign.title }}"
-                            src="{{ img if img.startswith('http') else url_for('static', filename='img/' ~ img) }}">
+                            src="{{ img if img.startswith('http') else url_for('static', filename=img) }}">
                         <span class="badge campaign-cat">{{ campaign.category }}</span>
                         {% if campaign.isFeatured %}
                         <span class="badge bg-warning text-dark campaign-featured">Featured</span>

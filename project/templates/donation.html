@@ -17,7 +17,7 @@
         <div class="addMargin">
 
         <a class="navbar-brand" href="{{ url_for('main.index') }}">
-         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png"> 
+         <img src="{{ url_for('static', filename='img/favicon.ico') }}" alt="Superchats Logo" style="height: 40px;"> 
          <br><br>
         </a>
         </div>
@@ -75,7 +75,7 @@
 
         <header class="front">
 
-            <img class="frontImg" alt="{{ campaign.title }}" src="{{ img if img.startswith('http') else url_for('static', filename='img/' ~ img) }}">
+            <img class="frontImg" alt="{{ campaign.title }}" src="{{ img if img.startswith('http') else url_for('static', filename=img) }}">
             <div class="frontOverlay">
 
 
@@ -190,7 +190,7 @@
                 <div class="text-white-50" style="font-size: 0.9rem;">{{ p.postDate.strftime('%d %b %Y') }}</div>
             </div>
             {% if p.postImage %}
-            <img src="{{ p.postImage if p.postImage.startswith('http') else url_for('static', filename='img/' ~ p.postImage) }}" alt="{{ p.title }}" class="my-2" style="max-width: 320px; max-height: 200px; object-fit: cover; border-radius: 0.5rem;">
+            <img src="{{ p.postImage if p.postImage.startswith('http') else url_for('static', filename=p.postImage) }}" alt="{{ p.title }}" class="my-2" style="max-width: 320px; max-height: 200px; object-fit: cover; border-radius: 0.5rem;">
             {% endif %}
             <div class="text-white-50">{{ p.content }}</div>
         </div>

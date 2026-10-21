@@ -83,7 +83,13 @@ def get_all_campaigns():
 
 def get_campaign_by_id(campaign_id):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE id = %s", (campaign_id,))
+    cur.execute("""
+        SELECT c.*, COALESCE(SUM(d.amount), 0) AS raised, COUNT(d.transactionID) AS donationCount
+        FROM campaign c
+        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+        WHERE c.id = %s
+        GROUP BY c.id
+    """, (campaign_id,))
     campaign = cur.fetchone()
     cur.close()
     return campaign
