@@ -16,10 +16,11 @@
     <div class="container" style="max-width: 480px;">
 
         <div class="text-center mb-4">
-            <a href="{{ url_for('main.index') }}">
-                <img src="{{ url_for('static', filename='img/favicon.ico') }}" alt="SuperChats Logo" style="height: 64px;" class="mb-3">
-            </a>
-            <h2 class="fw-bold mb-1 text-white">Welcome back</h2>
+              <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
+                </a>
+            <h2 class="fw-bold mb-1 text-white">Welcome </h2>
             <p class="text-secondary">Log in to your Superchat account</p>
         </div>
 
@@ -48,38 +49,65 @@
                 {{ form.submit(class="btn btn-warning btn-lg w-100 fw-semibold rounded-3 py-2 shadow-sm") }}
             </form> 
 
-            {% if test_accounts %}
-
-
-            <div class="mt-4 pt-4 border-top border-secondary-subtle">
-                <small class="text-uppercase text-secondary fw-bold d-block mb-2" style="letter-spacing: 0.5px; font-size: 0.75rem;">
-                    Test Credentials (Assessment)
-                </small>
-                <div class="table-responsive rounded-3 border border-secondary-subtle">
-                            <tr class="text-secondary">
-                                <th>Role</th>
-                                <th>Username</th>
-                                <th>Password</th>
-                            </tr>
-                        <tbody>
-                            {% for a in test_accounts %}
-                            <tr>
-                                <td><span class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1">{{ a.role }}</span></td>
-                                <td><code class="text-info bg-black px-2 py-1 rounded">{{ a.username }}</code></td>
-                                <td><code class="text-info bg-black px-2 py-1 rounded">{{ a.password }}</code></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            {% endif %}
+            
         </div>
 
-
-        <p class="text-center text-secondary mb-0">
+          <p class="text-center text-secondary mb-0">
             Don't have an account? <a href="{{ url_for('main.register') }}" class="text-decoration-none fw-bold text-warning">Register</a>
         </p>
+
+
+         <div class="mt-4 pt-4 border-top">
+
+            <div class="table-responsive rounded-3 border ">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th>Role</th>
+                            <th>Username</th>
+                            <th>Password</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span>Admin</span></td>
+                            <td><code >admin</code></td>
+                            <td><code >adminpassword123</code></td>
+                        </tr>
+                        <tr>
+                            <td><span >Admin</span></td>
+                            <td><code >Isaac</code></td>
+                            <td><code >isaac123</code></td>
+                        </tr>
+                        <tr>
+                            <td><span >Creator</span></td>
+                            <td><code >Niko</code></td>
+                            <td><code >niko123</code></td>
+                        </tr>
+                        <tr>
+                            <td><span >Creator</span></td>
+                            <td><code >MKBHD</code></td>
+                            <td><code >mkbhd123</code></td>
+                        </tr>
+                        <tr>
+                            <td><span>Customer</span></td>
+                            <td><code >Lara</code></td>
+                            <td><code >lara123</code></td>
+                        </tr>
+                        <tr>
+                            <td><span >Customer</span></td>
+                            <td><code>Jade</code></td>
+                            <td><code>jade123</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <br>
+
+
+      
     </div>
 
 </body>

@@ -6,7 +6,6 @@ from .forms import LoginForm, RegisterForm
 
 bp = Blueprint('main', __name__)
 
-
 # =====================================================================
 # AUTH HELPERS (current user + access control decorators)
 # =====================================================================
@@ -100,10 +99,10 @@ def login():
                 session['user_id'] = user['id']
                 flash('Welcome back, ' + user['username'] + '!', 'success')
                 if user['role'] == 'Admin':
-                    default = url_for('main.admin_dashboard')
+                     url_for('main.admin_dashboard')
                 else:
-                    default = url_for('main.index')
-                return redirect(_safe_next(request.args.get('next')) or default)
+                     url_for('main.index') 
+                return redirect(url_for('main.admin_dashboard'))
         else:
             flash('Invalid username/email or password.', 'danger')
 

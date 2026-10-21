@@ -10,58 +10,51 @@
 
     <body>
 
-        <nav class="navbar navbar-expand-lg justify-content-center">
-
+          <nav class="navbar">
         <div class="container-fluid">
+            <div class="addMargin">
 
-        <div class="addMargin">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                    <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
+                    <br><br>
+                </a>
 
-        <a class="navbar-brand" href="{{ url_for('main.index') }}">
-         <img src="{{ url_for('static', filename='img/favicon.ico') }}" alt="Superchats Logo" style="height: 40px;"> 
-         <br><br>
-        </a>
-        </div>
-
-        <input type="checkbox" id="navToggle" class="nav-toggle-checkbox">
-
-        <label for="navToggle" class="nav-toggle-btn">
-
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-            </svg>
-
-        </label>
-        
-        <div class="phoneView">
-            <label for="navToggle" class="phoneView-close">x</label>
-
-                <div class="navbar-collapse" id="navContent">
-                <ul class="navbar-nav mx-auto nav-links">
-                    <li class="nav-item"><a class="nav-link">SOCIALS</a></li>
-                    
-                    <li class="nav-item"><a class="nav-link" >DONATE</a></li>
-
-                    <li class="nav-item"><a class="nav-link" >TRENDING</a></li>
-                </ul>
             </div>
 
-            <div class = "textMargin">
-            <form class="form-inline" method="get" action="{{ url_for('main.index') }}#campaigns" role="search">
-                <div class ="inline">
+            <input type="checkbox" id="navToggle" class="nav-toggle-checkbox">
 
-                <input type="search" name="search" aria-label="Search campaigns" class="form-control mr-sm-2 searchBar"  placeholder="Find creators or campaigns">
-                <button class="btn btn-outline-light my-2 my-sm-0">
+            <label for="navToggle" class="nav-toggle-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                </svg>
+            </label>
 
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-                    </svg>
+            <div class="phoneView">
+                <label for="navToggle" class="phoneView-close">x</label>
+
+                <div class="textMargin">
+                    <form class="form-inline" method="get" action="{{ url_for('main.index') }}#campaigns" role="search">
+                        <div class="inline">
+                            <input type="search" name="search" value="{{ search }}" class="form-control mr-sm-2 searchBar"
+                                placeholder="Find creators or campaigns" aria-label="Search campaigns">
+
+                            <button type="submit" class="btn btn-outline-light my-2 my-sm-0" aria-label="Search">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
             </div>
+           {% include '_auth_nav.html' %}
         </div>
-            {% include '_auth_nav.html' %}
-        </div>
-        </nav>
+    </nav>
+
 
         {% include '_flashes.html' %}
 
