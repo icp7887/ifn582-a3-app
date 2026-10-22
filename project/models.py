@@ -95,6 +95,127 @@ def get_campaign_by_id(campaign_id):
     return campaign
 
 
+
+# CAMPAIGN DETAIL PAGE
+
+def get_campaign_detail(campaign_id):
+    # One campaign with its creator's profile, total raised and number of supporters
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT c.*, u.username AS creatorName, cr.bio AS creatorBio, cr.verifiedStatus AS creatorVerified,
+               COALESCE(SUM(d.amount), 0) AS raised,
+               COUNT(DISTINCT d.customerID) AS supporterCount,
+               COUNT(d.transactionID) AS donationCount
+        FROM campaign c
+        JOIN user u ON u.id = c.creatorID
+        JOIN creator cr ON cr.id = c.creatorID
+        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+        WHERE c.id = %s
+        GROUP BY c.id, u.username, cr.bio, cr.verifiedStatus
+    """, (campaign_id,))
+    row = cur.fetchone()
+    cur.close()
+
+
+# CREATOR DASHBOARD
+
+def get_creator_campaigns(creator_id):
+    # Every campaign owned by this creator, newest first, with the amount raised so far
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT c.*, COALESCE(SUM(d.amount), 0) AS raised
+        FROM campaign c
+        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+        WHERE c.creatorID = %s
+        GROUP BY c.id
+        ORDER BY c.id DESC
+    """, (creator_id,))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+def get_campaign_stats(campaign_id):
+    # Statistics worked out from the donation table every time the page loads
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT COUNT(*) AS donations,
+               COUNT(DISTINCT customerID) AS supporters,
+               COALESCE(SUM(amount), 0) AS raised,
+               COALESCE(AVG(amount), 0) AS average,
+               COALESCE(MAX(amount), 0) AS largest,
+               COALESCE(SUM(CASE WHEN transactionDate BETWEEN NOW() - INTERVAL 7 DAY AND NOW() THEN amount END), 0) AS last7days,
+               MAX(transactionDate) AS lastDonation
+        FROM donation
+        WHERE campaignID = %s AND status = 'Done'
+    """, (campaign_id,))
+    stats = cur.fetchone()
+    cur.execute("""
+        SELECT COALESCE(t.tierName, 'One-off') AS tier, COUNT(*) AS donations, SUM(d.amount) AS total
+        FROM donation d
+        LEFT JOIN subscriptionTier t ON t.id = d.tierID
+        WHERE d.campaignID = %s AND d.status = 'Done'
+        GROUP BY tier
+        ORDER BY total DESC
+    """, (campaign_id,))
+    stats['by_tier'] = cur.fetchall()
+    cur.close()
+    return stats
+
+def create_creator_campaign(creator_id, title, description, goal_amount, category, start_date, end_date, image):
+    # New campaigns start as Pending, so an admin has to approve them before they are public
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        INSERT INTO campaign (title, description, goalAmount, status, campaignImage, startDate, endDate,
+                              isFeatured, isFlagged, creatorID, category)
+        VALUES (%s, %s, %s, 'Pending', %s, %s, %s, FALSE, FALSE, %s, %s)
+    """, (title, description, goal_amount, image, start_date, end_date, creator_id, category))
+    mysql.connection.commit()
+    new_id = cur.lastrowid
+    cur.close()
+    return new_id
+
+def update_campaign_details(campaign_id, title, description, goal_amount, category, start_date, end_date, image):
+    # Status is not changed here: approval/rejection/suspension stay with the admin
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE campaign
+        SET title = %s, description = %s, goalAmount = %s, category = %s,
+            startDate = %s, endDate = %s, campaignImage = %s
+        WHERE id = %s
+    """, (title, description, goal_amount, category, start_date, end_date, image, campaign_id))
+    mysql.connection.commit()
+    cur.close()
+
+def get_post(post_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign_post WHERE id = %s", (post_id,))
+    row = cur.fetchone()
+    cur.close()
+    return row
+
+def add_post(campaign_id, title, content, image):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO campaign_post (campaignID, title, content, postImage, postDate) VALUES (%s, %s, %s, %s, CURDATE())",
+                (campaign_id, title, content, image))
+    mysql.connection.commit()
+    cur.close()
+
+def update_post(post_id, title, content, image):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE campaign_post SET title = %s, content = %s, postImage = %s WHERE id = %s",
+                (title, content, image, post_id))
+    mysql.connection.commit()
+    cur.close()
+
+def delete_post(post_id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM campaign_post WHERE id = %s", (post_id,))
+    mysql.connection.commit()
+    cur.close()
+
+
+
+
 # =====================================================================
 # ADMIN FETCH FUNCTIONS
 # =====================================================================
@@ -384,3 +505,168 @@ def set_featured_campaigns(campaign_ids): #only the ticked Active campaigns stay
     mysql.connection.commit()
     cur.close()
 
+
+
+# =====================================================================
+# CREATOR DASHBOARD (own campaigns, stats, donations, posts)
+# =====================================================================
+
+def get_campaign_detail(campaign_id): #one campaign + creator info + total raised
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT c.*, u.username AS creatorName, cr.bio AS creatorBio, cr.verifiedStatus AS creatorVerified,
+               COALESCE(SUM(d.amount), 0) AS raised,
+               COUNT(DISTINCT d.customerID) AS supporterCount,
+               COUNT(d.transactionID) AS donationCount
+        FROM campaign c
+        JOIN user u ON u.id = c.creatorID
+        JOIN creator cr ON cr.id = c.creatorID
+        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+        WHERE c.id = %s
+        GROUP BY c.id, u.username, cr.bio, cr.verifiedStatus
+    """, (campaign_id,))
+    row = cur.fetchone()
+    cur.close()
+    return row
+
+
+def get_creator_campaigns(creator_id): #this creator's campaigns, newest first
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT c.*, COALESCE(SUM(d.amount), 0) AS raised
+        FROM campaign c
+        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
+        WHERE c.creatorID = %s
+        GROUP BY c.id
+        ORDER BY c.id DESC
+    """, (creator_id,))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def create_creator_campaign(creator_id, title, description, goal_amount, category, start_date, end_date, image):
+    #new campaigns start as Pending so an admin must approve them first
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        INSERT INTO campaign (title, description, goalAmount, status, campaignImage, startDate, endDate,
+                              isFeatured, isFlagged, creatorID, category)
+        VALUES (%s, %s, %s, 'Pending', %s, %s, %s, FALSE, FALSE, %s, %s)
+    """, (title, description, goal_amount, image, start_date, end_date, creator_id, category))
+    mysql.connection.commit()
+    new_id = cur.lastrowid
+    cur.close()
+    return new_id
+
+
+def update_campaign_details(campaign_id, title, description, goal_amount, category, start_date, end_date, image):
+    #status is not changed here, that stays with the admin
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        UPDATE campaign
+        SET title = %s, description = %s, goalAmount = %s, category = %s,
+            startDate = %s, endDate = %s, campaignImage = %s
+        WHERE id = %s
+    """, (title, description, goal_amount, category, start_date, end_date, image, campaign_id))
+    mysql.connection.commit()
+    cur.close()
+
+
+def get_campaign_stats(campaign_id): #numbers for the Statistics section
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT COUNT(*) AS donations,
+               COUNT(DISTINCT customerID) AS supporters,
+               COALESCE(SUM(amount), 0) AS raised,
+               COALESCE(AVG(amount), 0) AS average,
+               COALESCE(MAX(amount), 0) AS largest,
+               COALESCE(SUM(CASE WHEN transactionDate BETWEEN NOW() - INTERVAL 7 DAY AND NOW() THEN amount END), 0) AS last7days,
+               MAX(transactionDate) AS lastDonation
+        FROM donation
+        WHERE campaignID = %s AND status = 'Done'
+    """, (campaign_id,))
+    stats = cur.fetchone()
+    cur.execute("""
+        SELECT COALESCE(t.tierName, 'One-off') AS tier, COUNT(*) AS donations, SUM(d.amount) AS total
+        FROM donation d
+        LEFT JOIN subscriptionTier t ON t.id = d.tierID
+        WHERE d.campaignID = %s AND d.status = 'Done'
+        GROUP BY tier
+        ORDER BY total DESC
+    """, (campaign_id,))
+    stats['by_tier'] = cur.fetchall()
+    cur.close()
+    return stats
+
+
+def get_campaign_donations(campaign_id, limit=10): #newest donations first
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT d.*, t.tierName
+        FROM donation d
+        LEFT JOIN subscriptionTier t ON t.id = d.tierID
+        WHERE d.campaignID = %s AND d.status = 'Done'
+        ORDER BY d.transactionID DESC
+        LIMIT %s
+    """, (campaign_id, limit))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_campaign_posts(campaign_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign_post WHERE campaignID = %s ORDER BY postDate DESC, id DESC", (campaign_id,))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_post(post_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign_post WHERE id = %s", (post_id,))
+    row = cur.fetchone()
+    cur.close()
+    return row
+
+
+def add_post(campaign_id, title, content, image):
+    cur = mysql.connection.cursor()
+    cur.execute("INSERT INTO campaign_post (campaignID, title, content, postImage, postDate) VALUES (%s, %s, %s, %s, CURDATE())",
+                (campaign_id, title, content, image))
+    mysql.connection.commit()
+    cur.close()
+
+
+def update_post(post_id, title, content, image):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE campaign_post SET title = %s, content = %s, postImage = %s WHERE id = %s",
+                (title, content, image, post_id))
+    mysql.connection.commit()
+    cur.close()
+
+
+def delete_post(post_id):
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM campaign_post WHERE id = %s", (post_id,))
+    mysql.connection.commit()
+    cur.close()
+
+
+def get_creator_tiers(creator_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM subscriptionTier WHERE creatorID = %s ORDER BY price", (creator_id,))
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def add_donation(campaign_id, customer_id, amount, name, email, address, message, tier_id, payment):
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        INSERT INTO donation (amount, donorName, donorEmail, donorAddress, message, tierID,
+                              paymentNetwork, status, customerID, campaignID)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'Done', %s, %s)
+    """, (amount, name, email, address, message, tier_id, payment, customer_id, campaign_id))
+    mysql.connection.commit()
+    cur.close()

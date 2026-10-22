@@ -1,0 +1,50 @@
+{% set page_title = 'Edit Update' %}
+{% include '_creator_header.html' %}
+
+        {% set label = 'font-weight: 300; font-size: 1.5rem;' %}
+        {% set p = form %}
+
+        <div class="container-fluid px-4 py-4" style="max-width: 900px;">
+
+            <a href="{{ url_for('main.manage_campaign', campaign_id=campaign.id, _anchor='updates') }}" class="text-muted">&larr; Back to {{ campaign.title }}</a>
+            <h1 class="fontLook mt-2">Edit Update</h1>
+            <p class="description">Posted {{ post.postDate.strftime('%d %b %Y') }} on {{ campaign.title }}</p>
+
+            <div style="border: 3px green solid;" class="card p-4">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {{ p.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ p.title.label(class="form-label", style=label) }}
+                        {{ p.title(class="form-control" + (" is-invalid" if p.title.errors else "")) }}
+                        {% if p.title.errors %}<div class="invalid-feedback">{{ p.title.errors[0] }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ p.content.label(class="form-label", style=label) }}
+                        {{ p.content(class="form-control" + (" is-invalid" if p.content.errors else ""), rows=5) }}
+                        {% if p.content.errors %}<div class="invalid-feedback">{{ p.content.errors[0] }}</div>{% endif %}
+                    </div>
+                    {% if post.postImage %}
+                    <div class="mb-3">
+                        <img src="{{ post.postImage if post.postImage.startswith('http') else url_for('static', filename=post.postImage) }}" alt="{{ post.title }}" style="max-width: 260px; max-height: 160px; object-fit: cover; border-radius: 0.5rem;">
+                        <div class="form-check mt-2">
+                            {{ p.remove_image(class="form-check-input") }}
+                            {{ p.remove_image.label(class="form-check-label") }}
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        {{ p.image.label(class="form-label", style=label) }}
+                        {{ p.image(class="form-control" + (" is-invalid" if p.image.errors else ""), accept="image/*") }}
+                        {% if p.image.errors %}<div class="invalid-feedback">{{ p.image.errors[0] }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success">Save Update</button>
+                    <a href="{{ url_for('main.manage_campaign', campaign_id=campaign.id, _anchor='updates') }}" class="btn btn-link text-muted">Cancel</a>
+                </form>
+            </div>
+        </div>
+
+        <br><br>
+
+    </body>
+
+</html>

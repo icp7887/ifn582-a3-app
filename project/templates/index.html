@@ -70,7 +70,7 @@
             <div class="frontContent">
                 <h2 class="fontLook">Support Creators</h2>
                 <p style="font-size:1.26rem;">Mr Beast Philanthropy</p>
-                <a href="{{ url_for('main.donation_page') }}" class="btn btn-light btn-lg">Explore</a>
+                <a href="{{ url_for('main.index', _anchor='campaigns') }}" class="btn btn-light btn-lg">Explore</a>
             </div>
         </div>
     </header>
@@ -261,7 +261,7 @@
                 <br>
 
                 <button class="btn btn-light btn-lg">
-                    <a style="text-decoration: none; color: black" href="{{ url_for('main.donation_page') }}">
+                    <a style="text-decoration: none; color: black" href="{{ url_for('main.index', _anchor='campaigns') }}">
                         Subscribe
                     </a>
                 </button>
@@ -302,7 +302,7 @@
                     <div class="footerTitle">Superchat</div>
                     <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
                         <li><a href="{{ url_for('main.index', _anchor='how-it-works') }}">How It Works</a></li>
-                        <li><a href="{{ url_for('main.donation_page') }}">Donate</a></li>
+                        <li><a href="{{ url_for('main.index', _anchor='campaigns') }}">Donate</a></li>
                     </ul>
                 </div>
 

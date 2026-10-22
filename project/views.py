@@ -1,14 +1,35 @@
+import os
+import uuid
+from datetime import date
 from functools import wraps
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session, g, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, g, abort, current_app
 from . import models
-from .forms import LoginForm, RegisterForm
+from .forms import LoginForm, RegisterForm, CampaignForm, PostForm,  DonationForm
 
 bp = Blueprint('main', __name__)
 
 # =====================================================================
 # AUTH HELPERS (current user + access control decorators)
 # =====================================================================
+
+CREATOR_STATUSES = ['Active', 'Paused', 'Closed']   # what a creator may switch between once approved
+
+
+def campaign_owner_required(view):
+    """Custom ownership decorator: the logged-in creator must own the campaign in the URL.
+    Loads the campaign into g.campaign so the view does not query it again."""
+    @wraps(view)
+    @creator_required
+    def wrapped(campaign_id, *args, **kwargs):
+        campaign = models.get_campaign_detail(campaign_id)
+        if campaign is None:
+            abort(404)
+        if campaign['creatorID'] != g.user['id']:
+            abort(403)                       # another fundraiser's campaign
+        g.campaign = campaign
+        return view(campaign_id, *args, **kwargs)
+    return wrapped
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -99,10 +120,11 @@ def login():
                 session['user_id'] = user['id']
                 flash('Welcome back, ' + user['username'] + '!', 'success')
                 if user['role'] == 'Admin':
-                     url_for('main.admin_dashboard')
+                    return redirect(url_for('main.admin_dashboard'))
+                elif user['role'] == 'Creator':
+                    return redirect(url_for('main.campaign'))
                 else:
-                     url_for('main.index') 
-                return redirect(url_for('main.admin_dashboard'))
+                    return redirect(url_for('main.index'))
         else:
             flash('Invalid username/email or password.', 'danger')
 
@@ -115,6 +137,149 @@ def logout():
     flash('You have been logged out.', 'secondary')
     return redirect(url_for('main.index'))
 
+
+def _save_image(file): #saves an uploaded image to static/img/uploads/ and returns the path to store in the DB
+    if not file or not file.filename:
+        return None
+    filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[-1].lower() #random name, never trust the uploaded one
+    folder = os.path.join(current_app.static_folder, 'img', 'uploads')
+    os.makedirs(folder, exist_ok=True)
+    file.save(os.path.join(folder, filename))
+    return 'img/uploads/' + filename
+
+
+def _render_creator_dashboard(campaign, campaign_form=None, post_form=None, status=200):
+    if campaign_form is None:
+        campaign_form = CampaignForm(data={
+            'title': campaign['title'], 'description': campaign['description'], 'goal': campaign['goalAmount'],
+            'category': campaign['category'], 'start_date': campaign['startDate'], 'end_date': campaign['endDate'],
+            'image_url': campaign['campaignImage'] if (campaign['campaignImage'] or '').startswith('http') else ''})
+    stats = models.get_campaign_stats(campaign['id'])
+    days_left = (campaign['endDate'] - date.today()).days
+    return render_template(
+        'campaign.html',
+        campaign=campaign,
+        my_campaigns=models.get_creator_campaigns(g.user['id']),
+        stats=stats,
+        days_left=days_left,
+        donations=models.get_campaign_donations(campaign['id'], limit=1000),
+        posts=models.get_campaign_posts(campaign['id']),
+        campaign_form=campaign_form,
+        post_form=post_form or PostForm(),
+        creator_statuses=CREATOR_STATUSES,
+    ), status
+
+
+@bp.route('/campaign')
+@creator_required
+def campaign():
+    # Open the creator's newest campaign, or invite them to create their first one
+    mine = models.get_creator_campaigns(g.user['id'])
+    if not mine:
+        return redirect(url_for('main.new_campaign'))
+    return redirect(url_for('main.manage_campaign', campaign_id=mine[0]['id']))
+
+
+@bp.route('/campaign/new', methods=['GET', 'POST'])
+@creator_required
+def new_campaign():
+    form = CampaignForm()
+    if request.method == 'GET':
+        form.start_date.data = date.today()
+    if form.validate_on_submit():
+        image = _save_image(form.image_file.data) or (form.image_url.data or '').strip() or None
+        new_id = models.create_creator_campaign(
+            g.user['id'], form.title.data.strip(), form.description.data.strip(), form.goal.data,
+            form.category.data, form.start_date.data, form.end_date.data, image)
+        flash('Campaign created! It will go public once an administrator approves it.', 'success')
+        return redirect(url_for('main.manage_campaign', campaign_id=new_id))
+    return render_template('campaign_new.html', form=form,
+                           my_campaigns=models.get_creator_campaigns(g.user['id'])), (400 if form.errors else 200)
+
+
+@bp.route('/campaign/<int:campaign_id>')
+@campaign_owner_required
+def manage_campaign(campaign_id):
+    return _render_creator_dashboard(g.campaign)
+
+
+@bp.route('/campaign/<int:campaign_id>/edit', methods=['POST'])
+@campaign_owner_required
+def edit_campaign(campaign_id):
+    campaign = g.campaign
+    if campaign['status'] == 'Suspended':
+        flash('This campaign has been suspended by an administrator and cannot be edited.', 'danger')
+        return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
+    form = CampaignForm()
+    if not form.validate_on_submit():
+        flash('Please fix the highlighted fields in Campaign Settings.', 'danger')
+        return _render_creator_dashboard(campaign, campaign_form=form, status=400)
+    # keep the old image unless a new upload or link was given
+    image = _save_image(form.image_file.data) or (form.image_url.data or '').strip() or campaign['campaignImage']
+    models.update_campaign_details(campaign_id, form.title.data.strip(), form.description.data.strip(),
+                                   form.goal.data, form.category.data, form.start_date.data,
+                                   form.end_date.data, image)
+    flash('Campaign details saved.', 'success')
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='settings'))
+
+
+@bp.route('/campaign/<int:campaign_id>/status', methods=['POST'])
+@campaign_owner_required
+def creator_set_status(campaign_id):
+    campaign = g.campaign
+    new_status = request.form.get('status')
+    # Creators can only move an approved campaign between Active, Paused and Closed.
+    # Pending, Rejected and Suspended are admin decisions, so they cannot be overridden here.
+    if campaign['status'] not in CREATOR_STATUSES:
+        flash(f'This campaign is {campaign["status"]}. Only an administrator can change that.', 'danger')
+    elif new_status not in CREATOR_STATUSES:
+        abort(400)
+    else:
+        models.update_campaign_status(campaign_id, new_status)
+        flash(f'Campaign is now {new_status}.', 'success')
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='status'))
+
+
+# ---------- campaign posts / updates ----------
+def _owned_post_or_404(campaign_id, post_id):
+    post = models.get_post(post_id)
+    if post is None or post['campaignID'] != campaign_id:   # post must belong to this (owned) campaign
+        abort(404)
+    return post
+
+
+@bp.route('/campaign/<int:campaign_id>/posts', methods=['POST'])
+@campaign_owner_required
+def add_post(campaign_id):
+    form = PostForm()
+    if not form.validate_on_submit():
+        flash('Please fix the highlighted fields in Campaign Updates.', 'danger')
+        return _render_creator_dashboard(g.campaign, post_form=form, status=400)
+    models.add_post(campaign_id, form.title.data.strip(), form.content.data.strip(), _save_image(form.image.data))
+    flash('Update posted.', 'success')
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='updates'))
+
+
+@bp.route('/campaign/<int:campaign_id>/posts/<int:post_id>/edit', methods=['GET', 'POST'])
+@campaign_owner_required
+def edit_post(campaign_id, post_id):
+    post = _owned_post_or_404(campaign_id, post_id)
+    form = PostForm(data={'title': post['title'], 'content': post['content']} if request.method == 'GET' else None)
+    if form.validate_on_submit():
+        image = _save_image(form.image.data) or (None if form.remove_image.data else post['postImage'])
+        models.update_post(post_id, form.title.data.strip(), form.content.data.strip(), image)
+        flash('Update saved.', 'success')
+        return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='updates'))
+    return render_template('campaign_post_edit.html', form=form, post=post, campaign=g.campaign), (400 if form.errors else 200)
+
+
+@bp.route('/campaign/<int:campaign_id>/posts/<int:post_id>/delete', methods=['POST'])
+@campaign_owner_required
+def delete_post(campaign_id, post_id):
+    _owned_post_or_404(campaign_id, post_id)
+    models.delete_post(post_id)
+    flash('Update deleted.', 'info')
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='updates'))
 
 # =====================================================================
 # HOMEPAGE (search, categories, featured campaigns, campaign list)
@@ -159,50 +324,69 @@ def index():
     )
 
 
+@bp.route('/campaigns/<int:campaign_id>') #public page; the admin dashboard links here (/campaign/<id> is the creator's own page)
+def campaign_detail(campaign_id):
+    return redirect(url_for('main.campaign_donation', campaign_id=campaign_id))
+
+
 # =====================================================================
 # DONATION
 # =====================================================================
 
-@bp.route('/donation/01')
-def donation_page():
-    campaign = models.get_campaign_by_id(1)
-    return render_template('donation.html', campaign=campaign)
+# @bp.route('/donation/01')
+# def donation_page():
+#     campaign = models.get_campaign_by_id(1)
+#     return render_template('donation.html', campaign=campaign)
+
+
+# @bp.route('/donation/<int:campaign_id>')
+# def campaign_donation(campaign_id):
+#     campaign = models.get_campaign_by_id(campaign_id)
+
+#     if campaign is None:
+#         abort(404)
+#     # Pending / Rejected / Suspended campaigns are hidden from the public
+#     if campaign['status'] not in ('Active', 'Paused', 'Closed'):
+#         is_owner = g.user is not None and g.user['id'] == campaign['creatorID']
+#         is_admin = g.user is not None and g.user['role'] == 'Admin'
+#         if not (is_owner or is_admin):
+#             abort(404)
+
+#     return render_template('donation.html', campaign=campaign)
+
 
 
 @bp.route('/donation/<int:campaign_id>')
 def campaign_donation(campaign_id):
-    campaign = models.get_campaign_by_id(campaign_id)
-
+    campaign = models.get_campaign_detail(campaign_id)  #includes creatorName, raised, etc.
     if campaign is None:
         abort(404)
-    # Pending / Rejected / Suspended campaigns are hidden from the public
-    if campaign['status'] not in ('Active', 'Paused', 'Closed'):
-        is_owner = g.user is not None and g.user['id'] == campaign['creatorID']
-        is_admin = g.user is not None and g.user['role'] == 'Admin'
-        if not (is_owner or is_admin):
-            abort(404)
-
-    return render_template('donation.html', campaign=campaign)
+    form = DonationForm()
+    form.set_tiers(models.get_creator_tiers(campaign['creatorID']))
+    return render_template('donation.html', campaign=campaign, form=form,
+                           tiers=models.get_creator_tiers(campaign['creatorID']),
+                           donations=models.get_campaign_donations(campaign_id),
+                           posts=models.get_campaign_posts(campaign_id))
 
 
-@bp.route('/campaign/<int:campaign_id>') #the admin dashboard links here
-def campaign_detail(campaign_id):
+@bp.route('/donation/<int:campaign_id>/donate', methods=['POST'])
+def donate(campaign_id):
+    if g.user is None or g.user['role'] != 'Customer':
+        flash('Please log in as a Supporter to donate.', 'warning')
+        return redirect(url_for('main.login'))
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404)
+    form = DonationForm()
+    form.set_tiers(models.get_creator_tiers(campaign['creatorID']))
+    if form.validate_on_submit():
+        models.add_donation(campaign_id, g.user['id'], form.amount.data, form.donor_name.data,
+                            form.email.data, form.address.data, form.message.data,
+                            form.tier.data or None, form.payment_method.data)
+        flash('Thank you for your donation!', 'success')
+    else:
+        flash('Please fix the donation form and try again.', 'danger')
     return redirect(url_for('main.campaign_donation', campaign_id=campaign_id))
-
-@bp.route('/donation')
-def donation():
-    return render_template('donation.html')
-
-
-# =====================================================================
-# CREATOR
-# =====================================================================
-
-@bp.route('/creator') #creator dashboard (linked from the nav for Creator accounts)
-@creator_required
-def campaign():
-    flash('The creator dashboard is not built yet.', 'info')
-    return redirect(url_for('main.index'))
 
 
 # =====================================================================
@@ -211,13 +395,6 @@ def campaign():
 
 CAMPAIGN_STATUSES = ['Pending', 'Active', 'Paused', 'Closed', 'Rejected', 'Suspended']
 
-#this is just a test route, delete later. It is used to verify that the admin dashboard fetch functions are working without the front-end.#
-@bp.route('/admin-dashboard-test')
-@admin_required
-def admin_dashboard_test():
-    pending = models.get_pending_campaigns()
-    featured = models.get_featured_campaigns()
-    return {"pending": pending, "featured": featured}
 
 
 #admin dashboard url route
