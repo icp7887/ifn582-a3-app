@@ -441,3 +441,32 @@ body {
 .campaign-creator {
     color: #aaa;
 }
+
+
+/* ===== Readable text on dark backgrounds ===== */
+
+/* search bar: typed text and placeholder */
+.searchBar,
+.searchBar:focus {
+    color: #fff;
+    background-color: #1c1c1c;
+}
+
+.searchBar::placeholder {
+    color: #aaa;
+}
+
+/* tier cards on the campaign page (name, price, perks) */
+.creator-card {
+    color: #fff;
+}
+
+/* grey helper text on dark pages (dashboards are white, so they keep Bootstrap's grey) */
+body:not(.dashboard-page) .text-muted {
+    color: #aaa !important;
+}
+
+/* placeholder hints inside dark form boxes (donate form) */
+body:not(.dashboard-page) .form-control::placeholder {
+    color: #888;
+}
