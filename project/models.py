@@ -1,11 +1,9 @@
 from . import mysql
 
-
 # =====================================================================
 # HOMEPAGE (campaign list, search, categories, featured)
 # =====================================================================
 
-# Active campaigns with creator name and total raised, featured first
 _ACTIVE_CAMPAIGNS = """
     SELECT c.*, u.username AS creatorName, COALESCE(SUM(d.amount), 0) AS raised
     FROM campaign c
@@ -25,7 +23,6 @@ def get_active_campaigns():
 
 
 def search_campaigns(search):
-    # Matches campaign title, category or creator name
     like = '%' + search + '%'
     cur = mysql.connection.cursor()
     cur.execute(
@@ -140,7 +137,7 @@ def get_campaign_stats(campaign_id):
     return stats
 
 def create_creator_campaign(creator_id, title, description, goal_amount, category, start_date, end_date, image):
-    # New campaigns start as Pending, so an admin has to approve them before they are public
+
     cur = mysql.connection.cursor()
     cur.execute("""
         INSERT INTO campaign (title, description, goalAmount, status, campaignImage, startDate, endDate,
@@ -153,7 +150,7 @@ def create_creator_campaign(creator_id, title, description, goal_amount, categor
     return new_id
 
 def update_campaign_details(campaign_id, title, description, goal_amount, category, start_date, end_date, image):
-    # Status is not changed here: approval/rejection/suspension stay with the admin
+
     cur = mysql.connection.cursor()
     cur.execute("""
         UPDATE campaign
@@ -197,10 +194,6 @@ def delete_post(post_id):
 # =====================================================================
 
 
-# =====================================================================
-# ADMIN ACTION FUNCTIONS
-# =====================================================================
-
 def update_campaign_status(campaign_id, new_status):
     # Update campaign status to Approved or Rejected
     cur = mysql.connection.cursor()
@@ -212,11 +205,6 @@ def update_campaign_status(campaign_id, new_status):
     cur.close()
 
 
-# =====================================================================
-# USERS + AUTH
-# =====================================================================
-
-#a user's role comes from which table they are in: admin, creator, or customer (Supporter)
 _USER_WITH_ROLE = """
     SELECT
         u.id, u.username, u.password, u.email, u.isSuspended,
@@ -324,10 +312,8 @@ def get_all_campaigns_with_creator(): #for the Approval of Campains section: pen
     cur.close()
     return rows
 
-def get_all_campaigns_with_details(): #for the Campaign Management and Featured sections: every campaign plus the creator's username and the amount raised
+def get_all_campaigns_with_details(): 
     cur = mysql.connection.cursor()
-    #JOIN user gets the creator's username
-    #LEFT JOIN donation keeps camapaigns with no donations (they show 0 raised). Only donations with status 'Done' are counted 
     cur.execute("""
         SELECT 
             c.*,
@@ -344,16 +330,16 @@ def get_all_campaigns_with_details(): #for the Campaign Management and Featured 
     return rows
 
 
-def delete_campaign(campaign_id): #deletes a campaigN. ON DELETE CASCADE in the database schema ensures that all related donations are also deleted when a campaign is removed.
+def delete_campaign(campaign_id): 
   cur = mysql.connection.cursor()
   cur.execute("DELETE FROM campaign WHERE id = %s", (campaign_id,))
-  mysql.connection.commit() #save changes to the database
+  mysql.connection.commit() 
   cur.close()   
 
-def delete_user(user_id): #deletes a user. ON DELETE CASCADE also deletes thier creator/customer/admin row and, for a creator, all thier campaigns, tiers and the donationa to those campaiagns
+def delete_user(user_id): 
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM user WHERE id = %s", (user_id,))
-    mysql.connection.commit() #save changes to the database
+    mysql.connection.commit() 
     cur.close()
 
 
@@ -393,14 +379,14 @@ def get_report_by_id(report_id):
     return row
 
 
-def set_report_status(report_id, status): #Resolved or Dismissed
+def set_report_status(report_id, status): 
     cur = mysql.connection.cursor()
     cur.execute("UPDATE report SET status = %s, reviewedAt = NOW() WHERE id = %s", (status, report_id))
     mysql.connection.commit()
     cur.close()
 
 
-def set_featured_campaigns(campaign_ids): #only the ticked Active campaigns stay featured
+def set_featured_campaigns(campaign_ids): 
     cur = mysql.connection.cursor()
     cur.execute("UPDATE campaign SET isFeatured = FALSE")
     if campaign_ids:

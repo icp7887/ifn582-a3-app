@@ -13,7 +13,7 @@ bp = Blueprint('main', __name__)
 # AUTH HELPERS (current user + access control decorators)
 # =====================================================================
 
-CREATOR_STATUSES = ['Active', 'Paused', 'Closed']   # what a creator may switch between once approved
+CREATOR_STATUSES = ['Active', 'Paused', 'Closed']  
 
 
 def campaign_owner_required(view):
@@ -26,7 +26,7 @@ def campaign_owner_required(view):
         if campaign is None:
             abort(404)
         if campaign['creatorID'] != g.user['id']:
-            abort(403)                       # another fundraiser's campaign
+            abort(403)                       
         g.campaign = campaign
         return view(campaign_id, *args, **kwargs)
     return wrapped
@@ -50,7 +50,7 @@ def login_required(view):
     return wrapped
 
 
-def role_required(*roles): #e.g. @role_required('Admin') or @role_required('Creator', 'Admin')
+def role_required(*roles): 
     def decorator(view):
         @wraps(view)
         @login_required
@@ -167,7 +167,6 @@ def _render_creator_dashboard(campaign, campaign_form=None, post_form=None, stat
 @bp.route('/campaign')
 @creator_required
 def campaign():
-    # Open the creator's newest campaign, or invite them to create their first one
     mine = models.get_creator_campaigns(g.user['id'])
     if not mine:
         return redirect(url_for('main.new_campaign'))
@@ -222,8 +221,6 @@ def edit_campaign(campaign_id):
 def creator_set_status(campaign_id):
     campaign = g.campaign
     new_status = request.form.get('status')
-    # Creators can only move an approved campaign between Active, Paused and Closed.
-    # Pending, Rejected and Suspended are admin decisions, so they cannot be overridden here.
     if campaign['status'] not in CREATOR_STATUSES:
         flash(f'This campaign is {campaign["status"]}. Only an administrator can change that.', 'danger')
     elif new_status not in CREATOR_STATUSES:
@@ -284,11 +281,8 @@ HOMEPAGE_CAMPAIGN_LIMIT = 3   # Campaigns shown before "SHOW ALL" is clicked
 
 @bp.route('/')
 def index():
-    # Read search text and selected category from the URL (e.g. /?search=water or /?category=Arts)
     search = request.args.get('search', '').strip()
     selected_category = request.args.get('category', '').strip()
-
-    # Choose which campaigns to show
     if search:
         campaigns = models.search_campaigns(search)
     elif selected_category:
@@ -299,9 +293,8 @@ def index():
     categories = models.get_categories()
     featured = models.get_featured_active_campaigns()
 
-    # Show only the first few campaigns unless "SHOW ALL" was clicked (/?show=all)
     show_all = request.args.get('show') == 'all'
-    total_campaigns = len(campaigns)    # Count before cutting the list
+    total_campaigns = len(campaigns)    
     if not show_all:
         campaigns = campaigns[:HOMEPAGE_CAMPAIGN_LIMIT]
 
@@ -309,12 +302,12 @@ def index():
         'index.html',
         campaigns=campaigns,
         categories=categories,
-        featured=featured,                       # Template expects the name 'featured'
-        search=search,                           # Shown in the search box and results title
-        selected_category=selected_category,     # Highlights the active category button
+        featured=featured,                       
+        search=search,                           
+        selected_category=selected_category,     
         total_campaigns=total_campaigns,
         limit=HOMEPAGE_CAMPAIGN_LIMIT,
-        show_all=show_all,                       # Template switches between SHOW ALL / SHOW LESS
+        show_all=show_all,                       
     )
 
 
@@ -401,27 +394,27 @@ CAMPAIGN_STATUSES = ['Pending', 'Active', 'Paused', 'Closed', 'Rejected', 'Suspe
 def admin_dashboard():
     return render_template(
         'admin_dashboard.html',
-        counts=models.get_dashboard_counts(),               #the 4 stat cards
-        pending=models.get_all_campaigns_with_creator(),    #Approval of Campaigns (includes creator username)
-        campaigns=models.get_all_campaigns_with_details(),  #Campaign Management (includes amount raised)
+        counts=models.get_dashboard_counts(),               
+        pending=models.get_all_campaigns_with_creator(),    
+        campaigns=models.get_all_campaigns_with_details(),  
         statuses=CAMPAIGN_STATUSES,
-        users=models.get_all_users(),                       #User Management
-        reports=models.get_open_reports(),                  #Flagged Content
+        users=models.get_all_users(),                       
+        reports=models.get_open_reports(),                  
         reviewed_reports=models.get_reviewed_reports(),
-        featured_options=models.get_active_campaigns(),     #Featured Campaigns checkboxes (Active only)
+        featured_options=models.get_active_campaigns(),     
     )
 
 
-#admin action routes
-@bp.route('/admin/approve/<int:campaign_id>', methods=['POST']) #approve campaign #<int:campaign_id> captures the campaign ID from the URL and passes it to the function as an integer parameter.
+
+@bp.route('/admin/approve/<int:campaign_id>', methods=['POST']) 
 @admin_required
 def approve_campaign(campaign_id):
-    models.update_campaign_status(campaign_id, 'Active') #approved campaigns go live on the homepage
+    models.update_campaign_status(campaign_id, 'Active') 
     flash('Campaign approved.', 'success')
     return redirect(url_for('main.admin_dashboard', _anchor='approval'))
 
 
-@bp.route('/admin/reject/<int:campaign_id>', methods=['POST']) #reject campaign
+@bp.route('/admin/reject/<int:campaign_id>', methods=['POST']) 
 @admin_required
 def reject_campaign(campaign_id):
     models.update_campaign_status(campaign_id, 'Rejected')
@@ -429,7 +422,7 @@ def reject_campaign(campaign_id):
     return redirect(url_for('main.admin_dashboard', _anchor='approval'))
 
 
-@bp.route('/admin/status/<int:campaign_id>', methods=['POST']) #change status / suspend / reinstate from Campaign Management
+@bp.route('/admin/status/<int:campaign_id>', methods=['POST']) 
 @admin_required
 def admin_set_campaign_status(campaign_id):
     status = request.form.get('status')
@@ -440,7 +433,7 @@ def admin_set_campaign_status(campaign_id):
     return redirect(url_for('main.admin_dashboard', _anchor='campaigns'))
 
 
-@bp.route('/admin/featured', methods=['POST']) #save the Featured Campaigns checkboxes
+@bp.route('/admin/featured', methods=['POST']) 
 @admin_required
 def admin_set_featured():
     ids = [int(i) for i in request.form.getlist('featured') if i.isdigit()]
@@ -449,7 +442,7 @@ def admin_set_featured():
     return redirect(url_for('main.admin_dashboard', _anchor='featured'))
 
 
-@bp.route('/admin/delete/<int:campaign_id>', methods=['POST']) #delete campaign
+@bp.route('/admin/delete/<int:campaign_id>', methods=['POST']) 
 @admin_required
 def admin_delete_campaign(campaign_id):
     models.delete_campaign(campaign_id)
@@ -457,7 +450,7 @@ def admin_delete_campaign(campaign_id):
     return redirect(url_for('main.admin_dashboard', _anchor='campaigns'))
 
 
-@bp.route('/admin/report/<int:report_id>/<action>', methods=['POST']) #dismiss a report, or suspend / remove the reported campaign
+@bp.route('/admin/report/<int:report_id>/<action>', methods=['POST']) 
 @admin_required
 def admin_review_report(report_id, action):
     report = models.get_report_by_id(report_id)
@@ -469,14 +462,14 @@ def admin_review_report(report_id, action):
         models.update_campaign_status(report['campaignID'], 'Suspended')
         models.set_report_status(report_id, 'Resolved')
     elif action == 'remove':
-        models.delete_campaign(report['campaignID']) #ON DELETE CASCADE removes the report too
+        models.delete_campaign(report['campaignID']) 
     else:
         abort(400)
     flash('Report reviewed.', 'success')
     return redirect(url_for('main.admin_dashboard', _anchor='reports'))
 
 
-@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST']) #Edit button in User Management
+@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def admin_edit_user(user_id):
     user = models.get_user_by_id(user_id)
@@ -498,10 +491,10 @@ def admin_edit_user(user_id):
     return render_template('admin_edit_user.html', form=form, user=user), (400 if form.errors else 200)
 
 
-@bp.route('/admin/user/<int:user_id>/suspend', methods=['POST']) #suspend or reinstate a user
+@bp.route('/admin/user/<int:user_id>/suspend', methods=['POST']) 
 @admin_required
 def admin_suspend_user(user_id):
-    if user_id == g.user['id']: # Prevent admin from suspending their own account
+    if user_id == g.user['id']: 
         flash('You cannot suspend your own account.', 'danger')
     else:
         suspend = request.form.get('suspend') == '1'
@@ -510,10 +503,10 @@ def admin_suspend_user(user_id):
     return redirect(url_for('main.admin_dashboard', _anchor='users'))
 
 
-@bp.route('/admin/delete_user/<int:user_id>', methods=['POST']) #delete user
+@bp.route('/admin/delete_user/<int:user_id>', methods=['POST']) 
 @admin_required
 def admin_delete_user(user_id):
-    if user_id == g.user['id']: # Prevent admin from deleting their own account
+    if user_id == g.user['id']: 
         flash('You cannot delete your own account.', 'danger')
     else:
         models.delete_user(user_id)
