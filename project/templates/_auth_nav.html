@@ -1,6 +1,5 @@
 <div class="auth-nav d-flex align-items-center gap-2">
     {% if g.user %}
-        {# name is hidden on phones to save space; the role only shows on wide screens #}
         <span class="auth-name d-none d-sm-inline">{{ g.user.username }}<span class="d-none d-xl-inline"> ({{ g.user.role }})</span></span>
         {% if g.user.role == 'Creator' %}
             <a class="btn btn-outline-light btn-sm text-nowrap" href="{{ url_for('main.campaign') }}">Dashboard</a>

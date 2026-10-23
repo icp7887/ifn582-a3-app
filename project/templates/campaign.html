@@ -56,13 +56,15 @@
             <p class="description">See progress towards fundraising goals</p>
 
            
-            <div class="d-flex flex-wrap gap-2 mb-4">
-                {% for c in my_campaigns %}
-                <a href="{{ url_for('main.manage_campaign', campaign_id=c.id) }}"
-                    class="btn {{ 'btn-dark' if c.id == campaign.id else 'btn-outline-dark' }}">
-                    {{ c.title }} <span class="badge bg-secondary ms-1">{{ c.status }}</span>
-                </a>
-                {% endfor %}
+            <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+                <label for="campaign-switch" class="mb-0">My campaigns ({{ my_campaigns|length }}):</label>
+                <select id="campaign-switch" class="form-select w-auto" style="max-width: 100%;" onchange="location.href = this.value">
+                    {% for c in my_campaigns %}
+                    <option value="{{ url_for('main.manage_campaign', campaign_id=c.id) }}" {% if c.id == campaign.id %}selected{% endif %}>
+                        {{ c.title }} ({{ c.status }})
+                    </option>
+                    {% endfor %}
+                </select>
                 <a href="{{ url_for('main.new_campaign') }}" class="btn btn-success">+ New Campaign</a>
             </div>
 

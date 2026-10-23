@@ -26,7 +26,7 @@ IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp']
 CATEGORIES = ['Arts', 'Community', 'Education', 'Health', 'Technology', 'Sports', 'Music']
 
 
-class CampaignForm(FlaskForm): #creator creates or edits a campaign
+class CampaignForm(FlaskForm):
     title = StringField('Title', validators=[InputRequired(), Length(min=3, max=150)])
     description = TextAreaField('Description', validators=[InputRequired(), Length(min=10, max=2000)])
     goal = DecimalField('Fundraising Goal ($)', places=2, validators=[InputRequired(), NumberRange(min=1, max=10000000)])
@@ -43,7 +43,7 @@ class CampaignForm(FlaskForm): #creator creates or edits a campaign
             raise ValidationError('End date must be after the start date.')
 
 
-class PostForm(FlaskForm): #campaign updates
+class PostForm(FlaskForm):
     title = StringField('Update Title', validators=[InputRequired(), Length(min=3, max=150)])
     content = TextAreaField('Update Content', validators=[InputRequired(), Length(max=5000)])
     image = FileField('Upload Image (optional)', validators=[FileAllowed(IMAGE_TYPES, 'Images only')])
@@ -51,7 +51,7 @@ class PostForm(FlaskForm): #campaign updates
     submit = SubmitField('Post Update')
 
 
-class DonationForm(FlaskForm): #donate form on the campaign page
+class DonationForm(FlaskForm):
     donor_name = StringField('Full Name', validators=[InputRequired(), Length(max=100)])
     email = StringField('Email', validators=[InputRequired(), Length(max=100),
                                              Regexp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', message='Enter a valid email address')])
@@ -63,5 +63,18 @@ class DonationForm(FlaskForm): #donate form on the campaign page
     message = TextAreaField('Message', validators=[Optional(), Length(max=500)])
     submit = SubmitField('Donate')
 
-    def set_tiers(self, tiers): #fill the tier dropdown from the creator's tiers (0 = no tier)
-        self.tier.choices = [(0, 'One-off donation (no tier)')] + [(t['id'], t['tierName']) for t in tiers]
+    def set_tiers(self, tiers):
+        self.tier_prices = {t['id']: t['price'] for t in tiers}
+        self.tier.choices = [(0, 'One-off donation (no tier)')] + [(t['id'], f"{t['tierName']} (${t['price']:,.0f}/month)") for t in tiers]
+
+    def validate_amount(self, field):
+        price = getattr(self, 'tier_prices', {}).get(self.tier.data)
+        if price is not None and field.data is not None and field.data < price:
+            raise ValidationError(f'That tier costs ${price:,.2f}, please donate at least that much.')
+
+class AdminUserForm(FlaskForm):
+    username = StringField('Username', validators=[InputRequired(), Length(min=3, max=50)])
+    email = StringField('Email', validators=[InputRequired(), Length(max=100),
+                                             Regexp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', message='Enter a valid email address')])
+    verified = BooleanField('Verified creator')
+    submit = SubmitField('Save changes')

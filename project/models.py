@@ -73,28 +73,6 @@ def get_featured_active_campaigns():
 # CAMPAIGN (general lookups)
 # =====================================================================
 
-def get_all_campaigns():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
-
-def get_campaign_by_id(campaign_id):
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT c.*, COALESCE(SUM(d.amount), 0) AS raised, COUNT(d.transactionID) AS donationCount
-        FROM campaign c
-        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
-        WHERE c.id = %s
-        GROUP BY c.id
-    """, (campaign_id,))
-    campaign = cur.fetchone()
-    cur.close()
-    return campaign
-
-
 
 # CAMPAIGN DETAIL PAGE
 
@@ -214,37 +192,9 @@ def delete_post(post_id):
     cur.close()
 
 
-
-
 # =====================================================================
 # ADMIN FETCH FUNCTIONS
 # =====================================================================
-
-def get_pending_campaigns():
-    # Fetch all campaigns with status 'Pending'
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE status = 'Pending'")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
-
-def get_featured_campaigns():
-    # Fetch all campaigns with isFeatured set to TRUE
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE isFeatured = TRUE")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
-
-def get_flagged_campaigns():
-    # Fetch all campaigns with isFlagged set to TRUE
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM campaign WHERE isFlagged = TRUE")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
 
 
 # =====================================================================
@@ -257,28 +207,6 @@ def update_campaign_status(campaign_id, new_status):
     cur.execute(
         "UPDATE campaign SET status = %s WHERE id = %s",
         (new_status, campaign_id)
-    )
-    mysql.connection.commit()
-    cur.close()
-
-
-def set_campaign_featured(campaign_id, is_featured):
-    # Update campaign featured status to True or False
-    cur = mysql.connection.cursor()
-    cur.execute(
-        "UPDATE campaign SET isFeatured = %s WHERE id = %s",
-        (is_featured, campaign_id)
-    )
-    mysql.connection.commit()
-    cur.close()
-
-
-def set_campaign_flagged(campaign_id, is_flagged):
-    # Update campaign flagged status to True or False
-    cur = mysql.connection.cursor()
-    cur.execute(
-        "UPDATE campaign SET isFlagged = %s WHERE id = %s",
-        (is_flagged, campaign_id)
     )
     mysql.connection.commit()
     cur.close()
@@ -415,30 +343,6 @@ def get_all_campaigns_with_details(): #for the Campaign Management and Featured 
     cur.close()
     return rows
 
-def get_all_creators(): #for the User Management section and the Create Campaign drop down: every user with role 'Creator' plus their verified status
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT 
-            u.id, 
-            u.username, 
-            u.email, 
-            cr.verifiedStatus
-        FROM creator cr
-        JOIN user u ON cr.id = u.id
-        ORDER BY cr.verifiedStatus, u.username
-    """)
-    rows = cur.fetchall()
-    cur.close()
-    return rows    
-
-def create_campaign(title, goal_amount, start_date, end_date, creator_id, category, campiagn_image=None): #adds a new campaign with status 'Pending', so it still has to be approved
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        INSERT INTO campaign (title, goalAmount, startDate, endDate, creatorID, category, campaignImage, status)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending')
-    """, (title, goal_amount, start_date, end_date, creator_id, category, campiagn_image))
-    mysql.connection.commit() #save changes to the database
-    cur.close()
 
 def delete_campaign(campaign_id): #deletes a campaigN. ON DELETE CASCADE in the database schema ensures that all related donations are also deleted when a campaign is removed.
   cur = mysql.connection.cursor()
@@ -506,12 +410,11 @@ def set_featured_campaigns(campaign_ids): #only the ticked Active campaigns stay
     cur.close()
 
 
-
 # =====================================================================
 # CREATOR DASHBOARD (own campaigns, stats, donations, posts)
 # =====================================================================
 
-def get_campaign_detail(campaign_id): #one campaign + creator info + total raised
+def get_campaign_detail(campaign_id):
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT c.*, u.username AS creatorName, cr.bio AS creatorBio, cr.verifiedStatus AS creatorVerified,
@@ -530,7 +433,7 @@ def get_campaign_detail(campaign_id): #one campaign + creator info + total raise
     return row
 
 
-def get_creator_campaigns(creator_id): #this creator's campaigns, newest first
+def get_creator_campaigns(creator_id):
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT c.*, COALESCE(SUM(d.amount), 0) AS raised
@@ -546,7 +449,6 @@ def get_creator_campaigns(creator_id): #this creator's campaigns, newest first
 
 
 def create_creator_campaign(creator_id, title, description, goal_amount, category, start_date, end_date, image):
-    #new campaigns start as Pending so an admin must approve them first
     cur = mysql.connection.cursor()
     cur.execute("""
         INSERT INTO campaign (title, description, goalAmount, status, campaignImage, startDate, endDate,
@@ -560,7 +462,6 @@ def create_creator_campaign(creator_id, title, description, goal_amount, categor
 
 
 def update_campaign_details(campaign_id, title, description, goal_amount, category, start_date, end_date, image):
-    #status is not changed here, that stays with the admin
     cur = mysql.connection.cursor()
     cur.execute("""
         UPDATE campaign
@@ -572,7 +473,7 @@ def update_campaign_details(campaign_id, title, description, goal_amount, catego
     cur.close()
 
 
-def get_campaign_stats(campaign_id): #numbers for the Statistics section
+def get_campaign_stats(campaign_id):
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT COUNT(*) AS donations,
@@ -599,7 +500,7 @@ def get_campaign_stats(campaign_id): #numbers for the Statistics section
     return stats
 
 
-def get_campaign_donations(campaign_id, limit=10): #newest donations first
+def get_campaign_donations(campaign_id, limit=10):
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT d.*, t.tierName
@@ -668,5 +569,30 @@ def add_donation(campaign_id, customer_id, amount, name, email, address, message
                               paymentNetwork, status, customerID, campaignID)
         VALUES (%s, %s, %s, %s, %s, %s, %s, 'Done', %s, %s)
     """, (amount, name, email, address, message, tier_id, payment, customer_id, campaign_id))
+    mysql.connection.commit()
+    cur.close()
+
+# =====================================================================
+# ADMIN: EDIT USER
+# =====================================================================
+
+def taken_by_other_user(username, email, user_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id FROM user WHERE (username = %s OR email = %s) AND id != %s", (username, email, user_id))
+    row = cur.fetchone()
+    cur.close()
+    return row is not None
+
+
+def update_user_details(user_id, username, email):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE user SET username = %s, email = %s WHERE id = %s", (username, email, user_id))
+    mysql.connection.commit()
+    cur.close()
+
+
+def set_creator_verified(user_id, verified):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE creator SET verifiedStatus = %s WHERE id = %s", (verified, user_id))
     mysql.connection.commit()
     cur.close()

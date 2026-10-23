@@ -189,9 +189,6 @@
             </h3>
             <span class="text-white-50">
                 {{ total_campaigns }} campaign{{ '' if total_campaigns == 1 else 's' }}
-                {% if search or selected_category %}
-                &middot; <a class="link-light" href="{{ url_for('main.index', _anchor='categories') }}">Clear filter</a>
-                {% endif %}
             </span>
         </div>
 

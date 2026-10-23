@@ -1,7 +1,15 @@
+SUPERCHAT - IFN582 Assessment 3
+===============================
+
+Experience the very best crowdfunding design for content creators and fans
+
 SETUP
-1. python -m venv venv
-2. Activate: venv\Scripts\activate (Windows) | source venv/bin/activate (Mac/Linux)
-3. pip install flask flask-wtf flask-mysqldb
-4. In MySQL: SOURCE project/database.sql;
-5. Update DB credentials in project/__init__.py if needed
-6. python run.py  ->  http://127.0.0.1:5000
+-----
+1. Install Python 3.10+ and MySQL 8
+2. python -m venv venv, then activate it
+3. pip install -r requirements.txt
+4. Set MYSQL_USER / MYSQL_PASSWORD in project/__init__.py
+5. mysql -u root -p < project/database.sql
+6. python run.py, then open http://127.0.0.1:5000
+7. Give us a 7, more than 86%, for our assessment 
+

@@ -190,7 +190,7 @@ body {
 
     @media (min-width: 992px) {
         .inline {
-            width: auto;
+            width: 86%;
             margin-right: 7em;
             margin-top: 0;
         
@@ -443,9 +443,7 @@ body {
 }
 
 
-/* ===== Readable text on dark backgrounds ===== */
 
-/* search bar: typed text and placeholder */
 .searchBar,
 .searchBar:focus {
     color: #fff;
@@ -456,17 +454,14 @@ body {
     color: #aaa;
 }
 
-/* tier cards on the campaign page (name, price, perks) */
 .creator-card {
     color: #fff;
 }
 
-/* grey helper text on dark pages (dashboards are white, so they keep Bootstrap's grey) */
 body:not(.dashboard-page) .text-muted {
     color: #aaa !important;
 }
 
-/* placeholder hints inside dark form boxes (donate form) */
 body:not(.dashboard-page) .form-control::placeholder {
     color: #888;
 }
