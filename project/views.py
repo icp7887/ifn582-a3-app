@@ -380,8 +380,6 @@ def donate(campaign_id):
     flash(f'Thank you for donating ${form.amount.data:,.2f} to {campaign["title"]}!', 'success')
     return redirect(page + '#supporters')
 
-
-
 # =====================================================================
 # ADMIN DASHBOARD (Campaign and User Management)
 # =====================================================================
@@ -396,17 +394,21 @@ def admin_dashboard():
     open_reports = models.get_open_reports()
     all_users = models.get_all_users()
 
+    for c in campaigns:
+        if c['status']:
+            c['status'] = c['status'].capitalize()
+
     pending_list = [
         c for c in campaigns 
-        if c['status'].lower() in ['pending', 'paused', 'suspended']
+        if c['status'] in ['Pending', 'Paused', 'Suspended']
     ]
     
     flagged_list = [c for c in campaigns if c['isFlagged']] 
-    active_list = [c for c in campaigns if c['status'].lower() == 'active' and not c['isFlagged']]
+    active_list = [c for c in campaigns if c['status'] == 'Active' and not c['isFlagged']]
 
     counts['pending'] = len([
         c for c in campaigns 
-        if c['status'].lower() in ['pending', 'suspended']
+        if c['status'] in ['Pending', 'Suspended']
     ])
     
     counts['active'] = len(active_list)
@@ -424,34 +426,39 @@ def admin_dashboard():
         users=all_users
     )
 
+
 # ---------- Update Campaign Status --------
 
 @bp.route('/admin/campaign/<int:campaign_id>/status', methods=['GET', 'POST'])
 @admin_required
 def change_campaign_status(campaign_id):
-    campaign = models.get_campaign_detail(campaign_id)
+
+    cur = models.mysql.connection.cursor()
+    cur.execute("SELECT title FROM campaign WHERE id = %s", (campaign_id,))
+    campaign = cur.fetchone()
+    
     if campaign is None:
+        cur.close()
         abort(404)
 
-    new_status = (request.args.get('status') or request.form.get('status') or '').strip().lower()
-    if new_status == 'pause': new_status = 'paused'
-    if new_status == 'suspend': new_status = 'suspended'
-    if new_status == 'approve': new_status = 'active'
-    if new_status == 'reject': new_status = 'rejected'
+    incoming = (request.args.get('status') or request.form.get('status') or '').strip().lower()
+    
+    if incoming == 'pause': incoming = 'paused'
+    if incoming == 'suspend': incoming = 'suspended'
+    if incoming == 'approve': incoming = 'active'
+    if incoming == 'reject': incoming = 'rejected'
     
     allowed_statuses = ['active', 'rejected', 'pending', 'paused', 'suspended', 'closed']
     
-    if new_status in allowed_statuses:
-        db_status = new_status.lower()
+    if incoming in allowed_statuses:
+        db_status = incoming.capitalize() 
+        keep_flagged = 1 if db_status == 'Rejected' else 0 
 
-        keep_flagged = 1 if db_status == 'Rejected' else 0
-
-        cur = mysql.connection.cursor()
         cur.execute(
             """UPDATE campaign SET status = %s, isFlagged = %s WHERE id = %s""",
             (db_status, keep_flagged, campaign_id)
         )
-        mysql.connection.commit()
+        models.mysql.connection.commit()
         cur.close()
         
         if db_status == 'Active':
@@ -463,6 +470,7 @@ def change_campaign_status(campaign_id):
         else:
             flash(f"'{campaign['title']}' status updated to {db_status}.", "secondary")
     else:
+        cur.close()
         abort(400)
         
     return redirect(url_for('main.admin_dashboard'))
@@ -473,14 +481,19 @@ def change_campaign_status(campaign_id):
 @bp.route('/admin/campaign/<int:campaign_id>/flag', methods=['GET', 'POST'])
 @admin_required
 def admin_toggle_flag(campaign_id):
-    campaign = models.get_campaign_detail(campaign_id)
+    cur = models.mysql.connection.cursor()
+    cur.execute("SELECT title FROM campaign WHERE id = %s", (campaign_id,))
+    campaign = cur.fetchone()
     if campaign is None:
+        cur.close()
         abort(404)
 
     is_flagged_param = request.args.get('is_flagged') or request.form.get('is_flagged') or 'True'
-    is_flagged = True if is_flagged_param == 'True' else False
+    is_flagged = 1 if is_flagged_param == 'True' else 0
     
-    models.set_campaign_flagged(campaign_id, is_flagged)
+    cur.execute("UPDATE campaign SET isFlagged = %s WHERE id = %s", (is_flagged, campaign_id))
+    models.mysql.connection.commit()
+    cur.close()
     
     if is_flagged:
         flash(f"'{campaign['title']}' has been flagged for review.", 'warning')
@@ -496,19 +509,19 @@ def admin_toggle_flag(campaign_id):
 @bp.route('/admin/campaign/<int:campaign_id>/delete', methods=['GET', 'POST'])
 @admin_required
 def admin_delete_campaign(campaign_id):
-    campaign = models.get_campaign_detail(campaign_id)
+    cur = models.mysql.connection.cursor()
+    cur.execute("SELECT title FROM campaign WHERE id = %s", (campaign_id,))
+    campaign = cur.fetchone()
     if campaign is None:
+        cur.close()
         abort(404) 
 
-    cur = mysql.connection.cursor()
     cur.execute("DELETE FROM campaign WHERE id = %s", (campaign_id,))
-    mysql.connection.commit()
+    models.mysql.connection.commit()
     cur.close()
 
     flash(f"Campaign '{campaign['title']}' has been deleted successfully.", 'danger')
     return redirect(url_for('main.admin_dashboard'))
-
-
 
 
 # -------------------- Featured Campaign --------------------
@@ -532,8 +545,8 @@ def resolve_incident_report(report_id):
     if report is None:
         abort(404)
 
-        campaign_id = request.args.get('campaign_id') or request.form.get('campaign_id')or request.args.get('campaignID') or request.form.get('campaignID')
-        models.set_report_status(report_id, 'Resolved')
+    campaign_id = request.args.get('campaign_id') or request.form.get('campaign_id')or request.args.get('campaignID') or request.form.get('campaignID')
+    models.set_report_status(report_id, 'Resolved')
 
     if campaign_id:
         models.set_campaign_flagged(int(campaign_id), True)
