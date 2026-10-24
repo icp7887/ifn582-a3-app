@@ -87,7 +87,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for campaign in campaigns if campaign.status|lower == 'active' and not campaign.isFlagged %}
+                    {% for campaign in campaigns if campaign.status == 'Active' and not campaign.isFlagged %}
                     
                     <tr>
                         <td>{{ campaign.id }}</td>
@@ -135,12 +135,12 @@
                 <div>
                     <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
                         <h3 class="h5 card-title mb-0 text-dark fw-bold">{{ campaign.title }}</h3>
-                        {% if campaign.status|lower == 'suspended' %}
+                        {% if campaign.status == 'Suspended' %} 
                             <span class="badge text-white fw-bold" style="background-color: #FF8C00 !important; border-color: #FF8C00 !important;">PENDING: Removed from Homepage</span>
-                        {% elif campaign.status|lower == 'pending' or campaign.status|lower == 'paused' %}
+                        {% elif campaign.status == 'Pending' or campaign.status == 'Paused' %}
                             <span class="badge text-white fw-bold" style="background-color: #0d8109 !important; border-color: #00d9ffc6 !important;">PENDING: Open Campaign</span>
                         {% else %}
-                            <span class="badge bg-secondary text-white fw-bold">{{ campaign.status.upper() }}</span>
+                            <span class="badge bg-secondary text-white fw-bold">{{ campaign.status}}</span>
                         {% endif %}
                     </div>
                     
@@ -300,7 +300,7 @@
     <form action="{{ url_for('main.configure_featured_showcase') }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row g-3">
-            {% for campaign in campaigns if campaign.status|lower == 'active' %}
+            {% for campaign in campaigns if campaign.status == 'Active' and not campaign.isFlagged %}
             <div class="col-md-4">
                 <div class="p-3 border rounded shadow-sm bg-light-subtle h-100 d-flex align-items-center">
                     <div class="form-check w-100">
