@@ -90,6 +90,7 @@ def get_campaign_detail(campaign_id):
     """, (campaign_id,))
     row = cur.fetchone()
     cur.close()
+    return rows
 
 
 # CREATOR DASHBOARD
