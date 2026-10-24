@@ -437,7 +437,7 @@ def change_campaign_status(campaign_id):
     allowed_statuses = ['active', 'rejected', 'pending', 'paused', 'suspended', 'closed']
     
     if new_status in allowed_statuses:
-        db_status = new_status.capitalize()
+        db_status = new_status.lower()
 
         keep_flagged = 1 if db_status == 'Rejected' else 0
 
