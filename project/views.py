@@ -527,8 +527,8 @@ def resolve_incident_report(report_id):
     if report is None:
         abort(404)
 
-    campaign_id = request.args.get('campaign_id') or request.form.get('campaign_id')
-    models.set_report_status(report_id, 'Resolved')
+        campaign_id = request.args.get('campaign_id') or request.form.get('campaign_id')or request.args.get('campaignID') or request.form.get('campaignID')
+        models.set_report_status(report_id, 'Resolved')
 
     if campaign_id:
         models.set_campaign_flagged(int(campaign_id), True)
