@@ -189,101 +189,12 @@ def delete_post(post_id):
     cur.close()
 
 
-# =====================================================================
-# ADMIN FETCH FUNCTIONS
-# =====================================================================
-
-
-def update_campaign_status(campaign_id, new_status):
-    # Update campaign status to Approved or Rejected
-    cur = mysql.connection.cursor()
-    cur.execute(
-        "UPDATE campaign SET status = %s WHERE id = %s",
-        (new_status, campaign_id)
-    )
-    mysql.connection.commit()
-    cur.close()
-
-
-_USER_WITH_ROLE = """
-    SELECT
-        u.id, u.username, u.password, u.email, u.isSuspended,
-        CASE WHEN a.id IS NOT NULL THEN 'Admin'
-             WHEN cr.id IS NOT NULL THEN 'Creator'
-             ELSE 'Customer' END AS role,
-        a.accessLevel,
-        cr.verifiedStatus
-    FROM user u
-    LEFT JOIN admin a ON a.id = u.id
-    LEFT JOIN creator cr ON cr.id = u.id
-"""
-
-
-def get_user_for_login(identifier): #login accepts either the username or the email
-    cur = mysql.connection.cursor()
-    cur.execute(_USER_WITH_ROLE + " WHERE u.username = %s OR u.email = %s", (identifier, identifier))
-    user = cur.fetchone()
-    cur.close()
-    return user
-
-
-def get_user_by_id(user_id): #used on every request to load the logged-in user into g.user
-    cur = mysql.connection.cursor()
-    cur.execute(_USER_WITH_ROLE + " WHERE u.id = %s", (user_id,))
-    user = cur.fetchone()
-    cur.close()
-    return user
-
-
-def username_or_email_taken(username, email):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT username, email FROM user WHERE username = %s OR email = %s", (username, email))
-    rows = cur.fetchall()
-    cur.close()
-    return {
-        'username': any(r['username'].lower() == username.lower() for r in rows),
-        'email': any(r['email'].lower() == email.lower() for r in rows),
-    }
-
-
-def create_user(username, email, password_hash, role): #adds the user row plus their creator or customer row in one transaction
-    cur = mysql.connection.cursor()
-    try:
-        cur.execute("INSERT INTO user (username, password, email) VALUES (%s, %s, %s)", (username, password_hash, email))
-        user_id = cur.lastrowid
-        if role == 'Creator':
-            cur.execute("INSERT INTO creator (id, verifiedStatus) VALUES (%s, FALSE)", (user_id,)) #new creators start unverified
-        else:
-            cur.execute("INSERT INTO customer (id) VALUES (%s)", (user_id,))
-        mysql.connection.commit()
-    except Exception:
-        mysql.connection.rollback()
-        raise
-    finally:
-        cur.close()
-    return user_id
-
-
-def get_all_users(): #for the admin User Management section
-    cur = mysql.connection.cursor()
-    cur.execute(_USER_WITH_ROLE + " ORDER BY role, u.username")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
-
-def set_user_suspended(user_id, is_suspended): #suspended users cannot log in
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE user SET isSuspended = %s WHERE id = %s", (is_suspended, user_id))
-    mysql.connection.commit()
-    cur.close()
-
 
 # =====================================================================
 # ADMIN DASHBOARD + CAMPAIGN / USER MANAGEMENT
 # =====================================================================
 
-def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin page (Pending, Active, Flagged Items, Users)
+def get_dashboard_counts(): 
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
@@ -292,14 +203,18 @@ def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin
         FROM campaign
     """)
     counts = cur.fetchone()
-    cur.execute("SELECT COUNT(*) AS reports FROM report WHERE status = 'Open'") #open reports are the "Flagged Items"
+    
+    cur.execute("SELECT COUNT(*) AS reports FROM report WHERE status = 'Open'") 
     counts['reports'] = cur.fetchone()['reports']
+    
     cur.execute("SELECT COUNT(*) AS users, SUM(isSuspended) AS suspended FROM user")
     counts.update(cur.fetchone())
     cur.close()
-    return {key: int(value or 0) for key, value in counts.items()} #SUM() returns None on an empty table and a Decimal otherwise, so convert every value to a plain whole number
+    
+    return {key: int(value or 0) for key, value in counts.items()} 
 
-def get_all_campaigns_with_creator(): #for the Approval of Campains section: pending campaigns plus the creator's username for each card
+
+def get_all_campaigns_with_creator(): 
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT 
@@ -311,6 +226,7 @@ def get_all_campaigns_with_creator(): #for the Approval of Campains section: pen
     rows = cur.fetchall()
     cur.close()
     return rows
+
 
 def get_all_campaigns_with_details(): 
     cur = mysql.connection.cursor()
@@ -330,11 +246,39 @@ def get_all_campaigns_with_details():
     return rows
 
 
+def get_all_creators(): 
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT 
+            u.id, 
+            u.username, 
+            u.email, 
+            cr.verifiedStatus
+        FROM creator cr
+        JOIN user u ON cr.id = u.id
+        ORDER BY cr.verifiedStatus, u.username
+    """)
+    rows = cur.fetchall()
+    cur.close()
+    return rows    
+
+
+def create_campaign(title, goal_amount, start_date, end_date, creator_id, category, campaign_image=None): 
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        INSERT INTO campaign (title, goalAmount, startDate, endDate, creatorID, category, campaignImage, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending')
+    """, (title, goal_amount, start_date, end_date, creator_id, category, campaign_image))
+    mysql.connection.commit() 
+    cur.close()
+
+
 def delete_campaign(campaign_id): 
-  cur = mysql.connection.cursor()
-  cur.execute("DELETE FROM campaign WHERE id = %s", (campaign_id,))
-  mysql.connection.commit() 
-  cur.close()   
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM campaign WHERE id = %s", (campaign_id,))
+    mysql.connection.commit() 
+    cur.close()   
+
 
 def delete_user(user_id): 
     cur = mysql.connection.cursor()
@@ -343,9 +287,64 @@ def delete_user(user_id):
     cur.close()
 
 
-# =====================================================================
+# ADMIN FETCH FUNCTIONS
+
+def get_pending_campaigns():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE status = 'Pending'")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_featured_campaigns():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE isFeatured = TRUE")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def get_flagged_campaigns():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM campaign WHERE isFlagged = TRUE")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+# ADMIN ACTION FUNCTIONS
+
+def update_campaign_status(campaign_id, new_status):
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "UPDATE campaign SET status = %s WHERE id = %s",
+        (new_status, campaign_id)
+    )
+    mysql.connection.commit()
+    cur.close()
+
+
+def set_campaign_featured(campaign_id, is_featured):
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "UPDATE campaign SET isFeatured = %s WHERE id = %s",
+        (is_featured, campaign_id)
+    )
+    mysql.connection.commit()
+    cur.close()
+
+
+def set_campaign_flagged(campaign_id, is_flagged):
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "UPDATE campaign SET isFlagged = %s WHERE id = %s",
+        (is_flagged, campaign_id)
+    )
+    mysql.connection.commit()
+    cur.close()
+
 # ADMIN REPORTS + FEATURED
-# =====================================================================
 
 _REPORTS = """
     SELECT r.*, c.title AS campaignTitle, c.status AS campaignStatus, u.username AS reporterName
@@ -395,6 +394,29 @@ def set_featured_campaigns(campaign_ids):
     mysql.connection.commit()
     cur.close()
 
+    
+# ADMIN: EDIT USER
+
+def taken_by_other_user(username, email, user_id):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT id FROM user WHERE (username = %s OR email = %s) AND id != %s", (username, email, user_id))
+    row = cur.fetchone()
+    cur.close()
+    return row is not None
+
+
+def update_user_details(user_id, username, email):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE user SET username = %s, email = %s WHERE id = %s", (username, email, user_id))
+    mysql.connection.commit()
+    cur.close()
+
+
+def set_creator_verified(user_id, verified):
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE creator SET verifiedStatus = %s WHERE id = %s", (verified, user_id))
+    mysql.connection.commit()
+    cur.close()
 
 # =====================================================================
 # CREATOR DASHBOARD (own campaigns, stats, donations, posts)
@@ -555,30 +577,5 @@ def add_donation(campaign_id, customer_id, amount, name, email, address, message
                               paymentNetwork, status, customerID, campaignID)
         VALUES (%s, %s, %s, %s, %s, %s, %s, 'Done', %s, %s)
     """, (amount, name, email, address, message, tier_id, payment, customer_id, campaign_id))
-    mysql.connection.commit()
-    cur.close()
-
-# =====================================================================
-# ADMIN: EDIT USER
-# =====================================================================
-
-def taken_by_other_user(username, email, user_id):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT id FROM user WHERE (username = %s OR email = %s) AND id != %s", (username, email, user_id))
-    row = cur.fetchone()
-    cur.close()
-    return row is not None
-
-
-def update_user_details(user_id, username, email):
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE user SET username = %s, email = %s WHERE id = %s", (username, email, user_id))
-    mysql.connection.commit()
-    cur.close()
-
-
-def set_creator_verified(user_id, verified):
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE creator SET verifiedStatus = %s WHERE id = %s", (verified, user_id))
     mysql.connection.commit()
     cur.close()
