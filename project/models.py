@@ -189,6 +189,83 @@ def delete_post(post_id):
     cur.close()
 
 
+# =====================================================================
+# USERS + AUTH
+# =====================================================================
+
+
+_USER_WITH_ROLE = """
+    SELECT
+        u.id, u.username, u.password, u.email, u.isSuspended,
+        CASE WHEN a.id IS NOT NULL THEN 'Admin'
+             WHEN cr.id IS NOT NULL THEN 'Creator'
+             ELSE 'Customer' END AS role,
+        a.accessLevel,
+        cr.verifiedStatus
+    FROM user u
+    LEFT JOIN admin a ON a.id = u.id
+    LEFT JOIN creator cr ON cr.id = u.id
+"""
+
+
+def get_user_for_login(identifier): 
+    cur = mysql.connection.cursor()
+    cur.execute(_USER_WITH_ROLE + " WHERE u.username = %s OR u.email = %s", (identifier, identifier))
+    user = cur.fetchone()
+    cur.close()
+    return user
+
+
+def get_user_by_id(user_id): 
+    cur = mysql.connection.cursor()
+    cur.execute(_USER_WITH_ROLE + " WHERE u.id = %s", (user_id,))
+    user = cur.fetchone()
+    cur.close()
+    return user
+
+
+def username_or_email_taken(username, email):
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT username, email FROM user WHERE username = %s OR email = %s", (username, email))
+    rows = cur.fetchall()
+    cur.close()
+    return {
+        'username': any(r['username'].lower() == username.lower() for r in rows),
+        'email': any(r['email'].lower() == email.lower() for r in rows),
+    }
+
+
+def create_user(username, email, password_hash, role):
+    cur = mysql.connection.cursor()
+    try:
+        cur.execute("INSERT INTO user (username, password, email) VALUES (%s, %s, %s)", (username, password_hash, email))
+        user_id = cur.lastrowid
+        if role == 'Creator':
+            cur.execute("INSERT INTO creator (id, verifiedStatus) VALUES (%s, FALSE)", (user_id,))  # new creators start unverified
+        else:
+            cur.execute("INSERT INTO customer (id) VALUES (%s)", (user_id,))
+        mysql.connection.commit()
+    except Exception:
+        mysql.connection.rollback()
+        raise
+    finally:
+        cur.close()
+    return user_id
+
+
+def get_all_users():  # for the admin User Management section
+    cur = mysql.connection.cursor()
+    cur.execute(_USER_WITH_ROLE + " ORDER BY role, u.username")
+    rows = cur.fetchall()
+    cur.close()
+    return rows
+
+
+def set_user_suspended(user_id, is_suspended): 
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE user SET isSuspended = %s WHERE id = %s", (is_suspended, user_id))
+    mysql.connection.commit()
+    cur.close()
 
 # =====================================================================
 # ADMIN DASHBOARD + CAMPAIGN / USER MANAGEMENT
