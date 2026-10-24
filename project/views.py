@@ -381,134 +381,263 @@ def donate(campaign_id):
     return redirect(page + '#supporters')
 
 
+
 # =====================================================================
-# ADMIN (every route here is Admin only)
+# ADMIN DASHBOARD (Campaign and User Management)
 # =====================================================================
 
 CAMPAIGN_STATUSES = ['Pending', 'Active', 'Paused', 'Closed', 'Rejected', 'Suspended']
 
-
-#admin dashboard url route
-@bp.route('/admin')
+@bp.route('/admin_dashboard', methods=['GET'])
 @admin_required
 def admin_dashboard():
+    counts = models.get_dashboard_counts()
+    campaigns = models.get_all_campaigns_with_details()
+    open_reports = models.get_open_reports()
+    all_users = models.get_all_users()
+
+    pending_list = [
+        c for c in campaigns 
+        if c['status'].lower() in ['pending', 'paused', 'suspended']
+    ]
+    
+    flagged_list = [c for c in campaigns if c['isFlagged']] 
+    active_list = [c for c in campaigns if c['status'].lower() == 'active' and not c['isFlagged']]
+
+    counts['pending'] = len([
+        c for c in campaigns 
+        if c['status'].lower() in ['pending', 'suspended']
+    ])
+    
+    counts['active'] = len(active_list)
+    counts['reports'] = len(flagged_list)
+    counts['users'] = len(all_users)
+    counts['suspended'] = len([u for u in all_users if u['isSuspended']])
+    
     return render_template(
         'admin_dashboard.html',
-        counts=models.get_dashboard_counts(),               
-        pending=models.get_all_campaigns_with_creator(),    
-        campaigns=models.get_all_campaigns_with_details(),  
-        statuses=CAMPAIGN_STATUSES,
-        users=models.get_all_users(),                       
-        reports=models.get_open_reports(),                  
-        reviewed_reports=models.get_reviewed_reports(),
-        featured_options=models.get_active_campaigns(),     
+        counts=counts,
+        campaigns=campaigns,
+        flagged=flagged_list,
+        pending=pending_list, 
+        reports=open_reports,
+        users=all_users
     )
 
+# ---------- Update Campaign Status --------
 
-
-@bp.route('/admin/approve/<int:campaign_id>', methods=['POST']) 
+@bp.route('/admin/campaign/<int:campaign_id>/status', methods=['GET', 'POST'])
 @admin_required
-def approve_campaign(campaign_id):
-    models.update_campaign_status(campaign_id, 'Active') 
-    flash('Campaign approved.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='approval'))
+def change_campaign_status(campaign_id):
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404)
 
+    new_status = (request.args.get('status') or request.form.get('status') or '').strip().lower()
+    allowed_statuses = ['active', 'rejected', 'pending', 'paused', 'suspended', 'closed']
+    
+    if new_status in allowed_statuses:
+        db_status = new_status.capitalize()
 
-@bp.route('/admin/reject/<int:campaign_id>', methods=['POST']) 
-@admin_required
-def reject_campaign(campaign_id):
-    models.update_campaign_status(campaign_id, 'Rejected')
-    flash('Campaign rejected.', 'secondary')
-    return redirect(url_for('main.admin_dashboard', _anchor='approval'))
+        keep_flagged = 1 if db_status == 'Rejected' else 0
 
-
-@bp.route('/admin/status/<int:campaign_id>', methods=['POST']) 
-@admin_required
-def admin_set_campaign_status(campaign_id):
-    status = request.form.get('status')
-    if status not in CAMPAIGN_STATUSES:
+        cur = mysql.connection.cursor()
+        cur.execute(
+            """UPDATE campaign SET status = %s, isFlagged = %s WHERE id = %s""",
+            (db_status, keep_flagged, campaign_id)
+        )
+        mysql.connection.commit()
+        cur.close()
+        
+        if db_status == 'Active':
+            flash(f"'{campaign['title']}' has been approved and is now live on the platform!", "success")
+        elif db_status == 'Paused':
+            flash(f"'{campaign['title']}' has been temporarily paused.", "info")
+        elif db_status == 'Suspended':
+            flash(f"'{campaign['title']}' has been suspended from the public feed.", "warning")
+        else:
+            flash(f"'{campaign['title']}' status updated to {db_status}.", "secondary")
+    else:
         abort(400)
-    models.update_campaign_status(campaign_id, status)
-    flash('Campaign status set to ' + status + '.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='campaigns'))
+        
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/featured', methods=['POST']) 
+# ---------------- Flag Campaign --------------------
+
+@bp.route('/admin/campaign/<int:campaign_id>/flag', methods=['GET', 'POST'])
 @admin_required
-def admin_set_featured():
-    ids = [int(i) for i in request.form.getlist('featured') if i.isdigit()]
-    models.set_featured_campaigns(ids)
-    flash('Featured campaigns updated.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='featured'))
+def admin_toggle_flag(campaign_id):
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404)
+
+    is_flagged_param = request.args.get('is_flagged') or request.form.get('is_flagged') or 'True'
+    is_flagged = True if is_flagged_param == 'True' else False
+    
+    models.set_campaign_flagged(campaign_id, is_flagged)
+    
+    if is_flagged:
+        flash(f"'{campaign['title']}' has been flagged for review.", 'warning')
+    else:
+        flash(f"Flag status removed for '{campaign['title']}'.", 'success')
+        
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/delete/<int:campaign_id>', methods=['POST']) 
+
+# ------------------- Delete Campaign ----------------------------------- 
+
+@bp.route('/admin/campaign/<int:campaign_id>/delete', methods=['GET', 'POST'])
 @admin_required
 def admin_delete_campaign(campaign_id):
-    models.delete_campaign(campaign_id)
-    flash('Campaign deleted.', 'secondary')
-    return redirect(url_for('main.admin_dashboard', _anchor='campaigns'))
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404) 
+
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM campaign WHERE id = %s", (campaign_id,))
+    mysql.connection.commit()
+    cur.close()
+
+    flash(f"Campaign '{campaign['title']}' has been deleted successfully.", 'danger')
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/report/<int:report_id>/<action>', methods=['POST']) 
+
+
+# -------------------- Featured Campaign --------------------
+
+@bp.route('/admin/configure-featured', methods=['POST'])
 @admin_required
-def admin_review_report(report_id, action):
+def configure_featured_showcase():
+    selected_campaign_ids = request.form.getlist('featured_campaigns', type=int)
+    models.set_featured_campaigns(selected_campaign_ids)
+    
+    flash("Your homepage featured campaigns showcase has been successfully updated!", "success")
+    return redirect(url_for('main.admin_dashboard'))
+
+
+# -------------------- User Management & Reports --------------------
+
+@bp.route('/admin/report/<int:report_id>/resolve', methods=['GET', 'POST'])
+@admin_required
+def resolve_incident_report(report_id):
     report = models.get_report_by_id(report_id)
     if report is None:
         abort(404)
-    if action == 'dismiss':
-        models.set_report_status(report_id, 'Dismissed')
-    elif action == 'suspend':
-        models.update_campaign_status(report['campaignID'], 'Suspended')
-        models.set_report_status(report_id, 'Resolved')
-    elif action == 'remove':
-        models.delete_campaign(report['campaignID']) 
-    else:
-        abort(400)
-    flash('Report reviewed.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='reports'))
+
+    campaign_id = request.args.get('campaign_id') or request.form.get('campaign_id')
+    models.set_report_status(report_id, 'Resolved')
+
+    if campaign_id:
+        models.set_campaign_flagged(int(campaign_id), True)
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE campaign SET status = 'Rejected' WHERE id = %s", (int(campaign_id),))
+        mysql.connection.commit()
+        cur.close()
+
+    flash('The user report has been marked as resolved', 'success')
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@bp.route('/admin/report/<int:report_id>/dismiss', methods=['GET', 'POST'])
 @admin_required
-def admin_edit_user(user_id):
+def dismiss_incident_report(report_id):
+    report = models.get_report_by_id(report_id)
+    if report is None:
+        abort(404)
+
+    models.set_report_status(report_id, 'Dismissed')
+    flash('The user report is officially dismissed', 'secondary')
+    return redirect(url_for('main.admin_dashboard'))
+
+
+@bp.route('/admin/user/<int:user_id>/toggle-suspension', methods=['GET', 'POST'])
+@admin_required
+def admin_toggle_user_suspension(user_id):
+    if user_id == g.user['id']:
+        flash('Security Check: You cannot suspend your own active account session!', 'danger')
+        return redirect(url_for('main.admin_dashboard'))
+
     user = models.get_user_by_id(user_id)
     if user is None:
         abort(404)
-    form = AdminUserForm(data={'username': user['username'], 'email': user['email'],
-                               'verified': bool(user['verifiedStatus'])} if request.method == 'GET' else None)
-    if form.validate_on_submit():
-        username = form.username.data.strip()
-        email = form.email.data.strip().lower()
-        if models.taken_by_other_user(username, email, user_id):
-            flash('Another account already uses that username or email.', 'danger')
-        else:
-            models.update_user_details(user_id, username, email)
-            if user['role'] == 'Creator':
-                models.set_creator_verified(user_id, form.verified.data)
-            flash('Account details for ' + username + ' saved.', 'success')
-            return redirect(url_for('main.admin_dashboard', _anchor='users'))
-    return render_template('admin_edit_user.html', form=form, user=user), (400 if form.errors else 200)
 
+    should_suspend_str = request.args.get('is_suspended') or request.form.get('is_suspended') or 'True'
+    should_suspend = True if should_suspend_str == 'True' else False
 
-@bp.route('/admin/user/<int:user_id>/suspend', methods=['POST']) 
-@admin_required
-def admin_suspend_user(user_id):
-    if user_id == g.user['id']: 
-        flash('You cannot suspend your own account.', 'danger')
+    models.set_user_suspended(user_id, should_suspend)
+
+    if should_suspend:
+        flash(f"User account '{user['username']}' has been suspended. User cannot log into account.", 'danger')
     else:
-        suspend = request.form.get('suspend') == '1'
-        models.set_user_suspended(user_id, suspend)
-        flash('User suspended.' if suspend else 'User reinstated.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='users'))
+        flash(f"User account '{user['username']}' is successfully reinstated.", 'success')
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/delete_user/<int:user_id>', methods=['POST']) 
+@bp.route('/admin/user/<int:user_id>/delete', methods=['GET', 'POST'])
 @admin_required
-def admin_delete_user(user_id):
-    if user_id == g.user['id']: 
-        flash('You cannot delete your own account.', 'danger')
-    else:
-        models.delete_user(user_id)
-        flash('User deleted.', 'secondary')
-    return redirect(url_for('main.admin_dashboard', _anchor='users'))
+def admin_delete_user_account(user_id):
+    if user_id == g.user['id']:
+        flash('WARNING: You cannot delete your own admin account!', 'danger')
+        return redirect(url_for('main.admin_dashboard'))
+
+    user = models.get_user_by_id(user_id)
+    if user is None:
+        abort(404)
+
+    models.delete_user(user_id)
+    flash(f"User account '{user['username']}' Superchat history is permanently deleted.", "secondary")
+    return redirect(url_for('main.admin_dashboard'))
+
+
+# -------------------- Edit Campaign --------------------
+
+@bp.route('/admin/campaign/<int:campaign_id>/edit', methods=['GET','POST'])
+@admin_required
+def admin_edit_campaign_details(campaign_id):
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404)
+
+    if request.method == 'POST':
+        updated_title = request.form.get('title').strip()
+        updated_description = request.form.get('description').strip()
+        updated_goal = request.form.get('goalAmount').strip()
+        updated_category = request.form.get('category').strip()
+        updated_start = request.form.get('startDate').strip()
+        updated_end = request.form.get('endDate').strip()
+        updated_image = request.form.get('campaignImage') or campaign['campaignImage']
+
+        models.update_campaign_details(
+            campaign_id, updated_title, updated_description, updated_goal, updated_category, updated_start, updated_end, updated_image
+        )
+        flash(f"Campaign details for '{updated_title}' is successfully updated.", 'success')
+        return redirect(url_for('main.admin_dashboard'))
+
+    return render_template('admin_campaign_edit.html', campaign=campaign)
+
+@bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_edit_user_details(user_id):
+    user = models.get_user_by_id(user_id)
+    if user is None:
+        abort(404)
+
+    if request.method == 'POST':
+        updated_username = request.form.get('username').strip()
+        updated_email = request.form.get('email').strip().lower()
+
+        cur = mysql.connection.cursor()
+        cur.execute(
+            "UPDATE user SET username = %s, email = %s WHERE id = %s",
+            (updated_username, updated_email, user_id)
+        )
+        mysql.connection.commit()
+        cur.close()
+
+        flash(f"Account details for '{updated_username}' have been updated successfully.", "success")
+        return redirect(url_for('main.admin_dashboard'))
+
+    return render_template('admin_edit_user.html', user=user)
