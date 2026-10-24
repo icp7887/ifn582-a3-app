@@ -1,295 +1,334 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperChats | Admin Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .stat-card { border-left: 4px solid; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .card-pending { border-left-color: #ffc107; }
+        .card-active { border-left-color: #198754; }
+        .card-flagged { border-left-color: #dc3545; }
+        .card-users { border-left-color: #0dcaf0; }
+        .dashboard-section { margin-bottom: 2.5rem; background: #fff; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); }
+    </style>
+</head>
+<body>
 
-    <title> SuperChats | Admin </title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-        <head>
-            <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
-        </head>
-
-        <body class="dashboard-page">
-
-        <nav class="navbar bg-white border-bottom">
-        
-        <div class="container-fluid">
-            <div class="addMargin">
-              <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                    <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
-                </a>
-            <span style = "margin-left: 26px;" class="badge bg-danger">Admin</span>
-        <br><br> 
-        </a>
-    
-        </div>
-
-        <form method="post" action="{{ url_for('main.logout') }}" class="m-0 d-flex align-items-center gap-2" style="margin-right: 26px !important;">
-            <span>{{ g.user.username }}</span>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-outline-dark btn-sm" title="Log out">
-            
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-            </svg>
-
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">SuperChats Admin</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
         </button>
-        </form>
-
-            </div>
-
-        </nav>
-
-        {% include '_flashes.html' %}
-
-        {% set status_badges = {'Active': 'bg-success', 'Pending': 'bg-warning text-dark', 'Paused': 'bg-info text-dark', 'Closed': 'bg-dark',
-                                'Suspended': 'bg-secondary', 'Rejected': 'bg-danger'} %}
-        {% set sub = 'font-weight: 300; font-size: 1.5rem;' %}
-        {% set card_title = 'font-weight: 300; font-size: 1.7rem;' %}
-        {% set money = '{:,.0f}' %}
-
-        <div class="container-fluid px-4 py-4" style="max-width: 1200px;">
-
-            <h1 class="fontLook">Admin Dashboard</h1>
-            <p class="description">Approve, manage and moderate campaigns and user accounts</p>
-
-            <!-- Stat cards -->
-            <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
-                <div class="col">
-                    <a href="#approval" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p class="number">{{ counts.pending }}</p>
-                        <p style="{{ sub }}" class="form-label">Pending</p>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="#campaigns" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p class="number">{{ counts.active }}</p>
-                        <p style="{{ sub }}" class="form-label">Active</p>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="#reports" style="border: 2px red solid;" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p style="color:red" class="number">{{ counts.reports }}</p>
-                        <p style="{{ sub }}" class="form-label">Flagged Items</p>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="#users" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p class="number">{{ counts.users }}</p>
-                        <p style="{{ sub }}" class="form-label">Users{% if counts.suspended %} <small class="text-muted">({{ counts.suspended }} suspended)</small>{% endif %}</p>
-                    </a>
-                </div>
-            </div>
-
-
-            <!-- Approve / reject new campaigns -->
-            <div id="approval" style="border: 3px green solid;" class="card p-4 mb-4">
-                <h2 class="titleLook">Approval of Campaigns</h2>
-                <p style="{{ sub }}">New campaigns stay hidden from the public until they are approved</p>
-
-                <div class="row row-cols-1 row-cols-md-2 g-3">
-                    {% for c in pending %}
-                    <div class="col">
-                        <div class="card h-100 p-3" style="font-weight: 300; font-size: 1.3rem;">
-                            <h3 class="text-muted" style="{{ card_title }}">
-                                <a class="text-reset" href="{{ url_for('main.campaign_detail', campaign_id=c.id) }}">{{ c.title }}</a>
-                            </h3>
-                            <div class="row text-muted g-2 mb-3">
-                                <div class="col-6"><strong class="d-block text-dark">Creator</strong>{{ c.creatorName }}</div>
-                                <div class="col-6"><strong class="d-block text-dark">Category</strong>{{ c.category }}</div>
-                                <div class="col-6"><strong class="d-block text-dark">Goal</strong>${{ money.format(c.goalAmount) }}</div>
-                                <div class="col-6"><strong class="d-block text-dark">Runs</strong>{{ c.startDate.strftime('%d %b') }} &ndash; {{ c.endDate.strftime('%d %b %Y') }}</div>
-                            </div>
-                            <div class="d-flex gap-2 justify-content-between mt-auto">
-                                <form method="post" action="{{ url_for('main.reject_campaign', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm">Reject</button>
-                                </form>
-                                <form method="post" action="{{ url_for('main.approve_campaign', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-success btn-sm">Approve</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-muted" style="font-size: 1.2rem;">No campaigns are waiting for approval.</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-
-            <!-- Manage every campaign -->
-            <div id="campaigns" style="border: 3px green solid;" class="card p-4 mb-4">
-                <h2 class="titleLook">Campaign Management</h2>
-                <p style="{{ sub }}">Change a campaign's status, suspend it or remove it</p>
-
-                <div class="row row-cols-1 row-cols-md-2 g-3" style="font-weight: 300; font-size: 1.3rem;">
-                    {% for c in campaigns %}
-                    <div class="col">
-                        <div class="card h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
-                                <h3 style="{{ card_title }}">
-                                    <a class="text-reset" href="{{ url_for('main.campaign_detail', campaign_id=c.id) }}">{{ c.title }}</a>
-                                </h3>
-                                <div class="text-nowrap">
-                                    {% if c.isFeatured %}<span class="badge bg-warning text-dark">Featured</span>{% endif %}
-                                    <span class="badge {{ status_badges.get(c.status, 'bg-secondary') }}">{{ c.status }}</span>
-                                </div>
-                            </div>
-                            <div class="text-muted mb-3">{{ c.creatorName }} - ${{ money.format(c.amountRaised) }} raised of ${{ money.format(c.goalAmount) }}</div>
-
-                            <div class="d-flex flex-wrap align-items-center gap-2 mt-auto">
-                                <form method="post" action="{{ url_for('main.admin_set_campaign_status', campaign_id=c.id) }}" class="d-flex gap-2">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <label class="visually-hidden" for="status-{{ c.id }}">Status</label>
-                                    <select id="status-{{ c.id }}" name="status" class="form-select form-select-sm w-auto">
-                                        {% for st in statuses %}<option {% if st == c.status %}selected{% endif %}>{{ st }}</option>{% endfor %}
-                                    </select>
-                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
-                                </form>
-                                <form method="post" action="{{ url_for('main.admin_set_campaign_status', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    {% if c.status == 'Suspended' %}
-                                    <input type="hidden" name="status" value="Active">
-                                    <button class="btn btn-outline-success btn-sm">Reinstate</button>
-                                    {% else %}
-                                    <input type="hidden" name="status" value="Suspended">
-                                    <button class="btn btn-outline-warning btn-sm">Suspend</button>
-                                    {% endif %}
-                                </form>
-                                <form method="post" action="{{ url_for('main.admin_delete_campaign', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-
-            <!-- Manage user accounts -->
-            <div id="users" style="border: 3px green solid;" class="card p-4 mb-4">
-                <h2 class="titleLook">User Management</h2>
-                <p style="{{ sub }}">Edit account details, or suspend and remove accounts that break your terms</p>
-
-                <div class="row row-cols-1 row-cols-md-2 g-3" style="font-weight: 300; font-size: 1.3rem;">
-                    {% for u in users %}
-                    {% set is_me = u.id == g.user.id %}
-                    <div class="col">
-                        <div class="card h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
-                                <h3 style="{{ card_title }}">{{ u.username }}{% if is_me %} <small class="text-muted">(you)</small>{% endif %}</h3>
-                                <div class="text-nowrap">
-                                    {% if u.role == 'Creator' and u.verifiedStatus %}<span class="badge bg-primary">Verified</span>{% endif %}
-                                    {% if u.isSuspended %}<span class="badge bg-secondary">Suspended</span>{% else %}<span class="badge bg-success">Active</span>{% endif %}
-                                </div>
-                            </div>
-                            <div class="text-muted mb-3">{{ u.email }} - {{ u.accessLevel if u.role == 'Admin' else ('Supporter' if u.role == 'Customer' else u.role) }}</div>
-
-                            <div class="d-flex flex-wrap gap-2 mt-auto">
-                                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('main.admin_edit_user', user_id=u.id) }}">Edit</a>
-                                {% if not is_me %}
-                                <form method="post" action="{{ url_for('main.admin_suspend_user', user_id=u.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    {% if u.isSuspended %}
-                                    <input type="hidden" name="suspend" value="0">
-                                    <button class="btn btn-outline-success btn-sm">Reinstate</button>
-                                    {% else %}
-                                    <input type="hidden" name="suspend" value="1">
-                                    <button class="btn btn-outline-warning btn-sm">Suspend</button>
-                                    {% endif %}
-                                </form>
-                                <form method="post" action="{{ url_for('main.admin_delete_user', user_id=u.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-
-            <!-- Reported content -->
-            <div id="reports" style="border: 3px red solid;" class="card p-4 mb-4">
-                <h2 class="titleLook">Flagged Content</h2>
-                <p style="{{ sub }}">Review content reported as inappropriate or misleading</p>
-
-                <div class="row row-cols-1 row-cols-md-2 g-3" style="font-weight: 300; font-size: 1.3rem;">
-                    {% for r in reports %}
-                    <div class="col">
-                        <div class="card h-100 p-3">
-                            <h3 style="{{ card_title }}">Report on
-                                "<a class="text-reset" href="{{ url_for('main.campaign_detail', campaign_id=r.campaignID) }}">{{ r.campaignTitle }}</a>"
-                                <span class="badge {{ status_badges.get(r.campaignStatus, 'bg-secondary') }} align-middle" style="font-size: 0.8rem;">{{ r.campaignStatus }}</span>
-                            </h3>
-                            <div class="mb-1"><strong>{{ r.reason }}</strong></div>
-                            {% if r.details %}<div class="text-muted mb-2" style="font-size: 1.1rem;">{{ r.details }}</div>{% endif %}
-                            <div class="text-muted mb-3" style="font-size: 1rem;">Reported by {{ r.reporterName or 'a deleted account' }} on {{ r.reportedAt.strftime('%d %b %Y') }}</div>
-
-                            <div class="d-flex flex-wrap gap-2 mt-auto">
-                                {% for action, label, style in [('dismiss', 'Dismiss', 'btn-outline-secondary'), ('suspend', 'Suspend campaign', 'btn-outline-warning'), ('remove', 'Remove campaign', 'btn-outline-danger')] %}
-                                <form method="post" action="{{ url_for('main.admin_review_report', report_id=r.id, action=action) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn {{ style }} btn-sm">{{ label }}</button>
-                                </form>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-muted" style="font-size: 1.2rem;">No reports waiting for review.</p>
-                    {% endfor %}
-                </div>
-
-                {% if reviewed_reports %}
-                <h3 class="mt-4" style="font-weight: 300; font-size: 1.4rem;">Recently reviewed</h3>
-                <ul class="list-unstyled mb-0 text-muted" style="font-size: 1.1rem;">
-                    {% for r in reviewed_reports %}
-                    <li>{{ r.reason }} on "{{ r.campaignTitle }}" &middot; {{ r.status }}{% if r.reviewedAt %} {{ r.reviewedAt.strftime('%d %b %Y') }}{% endif %}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
-
-
-            <!-- Homepage featured section -->
-            <div id="featured" class="card p-3 p-md-5" style="border: 3px green solid">
-                <h2 class="titleLook">Featured Campaigns</h2>
-                <p style="{{ sub }}">Showcase the very best on the home page for all to see. Only Active campaigns can be featured.</p>
-
-                <form method="post" action="{{ url_for('main.admin_set_featured') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3" style="font-weight: 300; font-size: 1.3rem;">
-                        {% for c in featured_options %}
-                        <div class="col">
-                            <div class="card p-3 h-100">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="featured" value="{{ c.id }}" id="feat-{{ c.id }}" {% if c.isFeatured %}checked{% endif %}>
-                                    <label class="form-check-label" for="feat-{{ c.id }}" style="font-weight: 700; font-size: 1.2rem;">{{ c.title }}</label>
-                                    <div class="text-muted" style="font-size: 0.95rem;">{{ c.creatorName }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <p class="text-muted">No active campaigns to feature.</p>
-                        {% endfor %}
-                    </div>
-                    <button type="submit" class="btn btn-success">Save</button>
-                </form>
-            </div>
-
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <span class="nav-link text-light">Logged in as: <strong>{{ g.user.username if g.user else 'Admin' }}</strong></span>
+                </li>
+            </ul>
         </div>
+    </div>
+</nav>
 
-        <br><br>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Admin Dashboard</h1>
+        <p class="text-muted">Update or delete fundraising events and see flagged content</p>
+    </div>
 
-    </body>
+<!---------------- Stats Cards ------------------->
 
+    <div class="row g-3 mb-5">
+        <div class="col-md-3">
+            <div class="card stat-card card-pending shadow-sm p-3">
+                <div class="text-muted text-uppercase small fw-bold">Pending Approval</div>
+                <div class="fs-2 fw-bold text-warning">{{ counts.pending }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card card-active shadow-sm p-3">
+                <div class="text-muted text-uppercase small fw-bold">Active Campaigns</div>
+                <div class="fs-2 fw-bold text-success">{{ counts.active }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card card-flagged shadow-sm p-3">
+                <div class="text-muted text-uppercase small fw-bold">Flagged</div>
+                <div class="fs-2 fw-bold text-danger">{{ counts.reports }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card card-users shadow-sm p-3">
+                <div class="text-muted text-uppercase small fw-bold">Total Users</div>
+                <div class="fs-2 fw-bold text-info">{{ counts.users }} <span class="fs-6 text-muted fw-normal">({{ counts.suspended }} suspended)</span></div>
+            </div>
+        </div>
+    </div>
+
+<!------------------------------ Approved Campaigns ------------------------------>
+    <div class="dashboard-section">
+        <h2 class="h4 mb-3 border-bottom pb-2 text-success">Approved Campaign's</h2>
+        <p class="text-muted small">Campaigns that are verified, live, and actively receiving crowdfunding support.</p>
+        
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Campaign Title</th>
+                        <th>Creator</th>
+                        <th>Category</th>
+                        <th>Progress Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in campaigns if campaign.status|lower == 'active' and not campaign.isFlagged %}
+                    
+                    <tr>
+                        <td>{{ campaign.id }}</td>
+                        <td>
+                            <div class="fw-bold">{{ campaign.title }}</div>
+                            <small class="text-muted">Target: ${{ '{:,.2f}'.format(campaign.goalAmount) }}</small>
+                        </td>
+                        <td>{{ campaign.creatorName }}</td>
+                        <td><span class="badge bg-secondary">{{ campaign.category }}</span></td>
+                        <td>
+                            <div class="progress" style="height: 6px; max-width: 150px;">
+                                {% set pct = (campaign.amountRaised / campaign.goalAmount * 100) if campaign.goalAmount > 0 else 0 %}
+                                <div class="progress-bar bg-success" style="width: {{ pct if pct <= 100 else 100 }}%"></div>
+                            </div>
+                            <small class="text-muted">${{ '{:,.2f}'.format(campaign.amountRaised) }} raised</small>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ url_for('main.change_campaign_status', campaign_id=campaign.id, status='paused') }}" class="btn btn-sm text-white" style="background-color: #CC5500; border-color: #CC5500;">Pause</a>
+                                <a href="{{ url_for('main.admin_toggle_flag', campaign_id=campaign.id, is_flagged='True') }}"class="btn btn-sm btn-warning">Flag Content</a>
+                                </div>
+                            </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        
+                        <td colspan="6" class="text-center text-muted py-3">No approved fundraising campaigns are live yet on the network.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!----------------------- Campaign Management ------------------------->
+<div class="dashboard-section">
+    <h2 class="h4 mb-3 border-bottom pb-2 text-primary">Campaign Management</h2>
+    <p class="text-muted small">Approve, flag or delete campaigns waiting for admin verification.</p>
+    <div class="row g-3">
+        
+    {% for campaign in pending %}
+    <div class="col-md-6">
+        <div class="card h-100 border-light shadow-sm">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                        <h3 class="h5 card-title mb-0 text-dark fw-bold">{{ campaign.title }}</h3>
+                        {% if campaign.status|lower == 'suspended' %}
+                            <span class="badge text-white fw-bold" style="background-color: #FF8C00 !important; border-color: #FF8C00 !important;">PENDING: Removed from Homepage</span>
+                        {% elif campaign.status|lower == 'pending' or campaign.status|lower == 'paused' %}
+                            <span class="badge text-white fw-bold" style="background-color: #0d8109 !important; border-color: #00d9ffc6 !important;">PENDING: Open Campaign</span>
+                        {% else %}
+                            <span class="badge bg-secondary text-white fw-bold">{{ campaign.status.upper() }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h6 class="card-subtitle mb-2 text-muted small">Category: {{ campaign.category }} | ID: #{{ campaign.id }}</h6>
+                    <p class="card-text small text-secondary mb-3">{{ campaign.description | truncate(120) }}</p>
+                    
+                    <p class="card-text small text-dark mb-0">
+                        <strong>Creator:</strong> {{ campaign.creatorName }}<br>
+                        <strong>Goal Target:</strong> ${{ '{:,.2f}'.format(campaign.goalAmount) }}
+                    </p>
+                </div>
+                
+                <div class="d-flex gap-2 justify-content-end mt-3 border-top pt-2">
+                    <a href="{{ url_for('main.change_campaign_status', campaign_id=campaign.id, status='active') }}" class="btn btn-sm btn-success">Approve</a>
+                    
+                    <a href="{{ url_for('main.change_campaign_status', campaign_id=campaign.id, status='suspended') }}" class="btn btn-sm btn-warning">Suspend</a>
+                    
+                    <a href="{{ url_for('main.admin_delete_campaign', campaign_id=campaign.id) }}" class="btn btn-sm btn-danger"
+                       onclick="return confirm('Are you sure you want to permanently delete this campaign? All history will be lost.');">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-light text-center mb-0 text-muted">No campaigns currently inside the management loop.</div>
+    </div>
+    {% endfor %}
+    
+    </div> 
+</div>
+
+
+<!--------------------------Flagged Campaign's-------------------------->
+
+<div class="dashboard-section border-start border-danger border-3">
+    <h2 class="h4 mb-3 text-danger">Flagged Campaign's</h2>
+    <p class="text-muted small">Review campaigns for approval or ban.</p>
+    
+    <div class="row g-3">
+        {% for campaign in campaigns if campaign.isFlagged %}
+        <div class="col-md-6">
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small">Status: Flagged for Review</span>
+                    <span class="badge bg-light text-danger">ID: #{{ campaign.id }}</span>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="h6 mb-1">Target Campaign: <strong>{{ campaign.title }}</strong></h4>
+                        <p class="text-muted small mb-2">Category: {{ campaign.category }} | Creator: {{ campaign.creatorName }}</p>
+                        <div class="bg-light p-2 rounded small text-dark mb-3" style="min-height: 50px;">
+                            <strong>Description:</strong> {{ campaign.description | truncate(120) }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 justify-content-end border-top pt-2 mt-2">
+                        <a href="{{ url_for('main.change_campaign_status', campaign_id=campaign.id, status='rejected') }}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to resolve this report by banning and rejecting this campaign?');">Ban Campaign</a>
+
+                       <a href="{{ url_for('main.change_campaign_status', campaign_id=campaign.id, status='suspended') }}" 
+                           class="btn btn-secondary btn-sm">Dismiss Report (Unflag)</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-success mb-0 text-center">Excellent! No open flagged items or incident reports found.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+<!-- ======================= User Management ======================= -->
+<div class="dashboard-section mt-5">
+    <h2 class="h4 mb-3 border-bottom pb-2 text-info">User Management</h2>
+    <p class="text-muted small">Perform administrative profile inspections, audit user roles, verification statuses, and execute secure lifecycle modifications.</p>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>User ID</th>
+                    <th>Profile Username</th>
+                    <th>Email Coordinate</th>
+                    <th>Platform Role</th>
+                    <th>Account Verification Status</th>
+                    <th class="text-end">Restricted Control</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td class="fw-bold text-secondary">#{{ user.id }}</td>
+                    <td class="fw-bold text-dark">{{ user.username }}</td>
+                    <td class="text-muted">{{ user.email }}</td>
+                    <td>
+                        {% if user.role == 'Admin' %}
+                            <span class="badge bg-dark text-white fw-bold">Admin</span>
+                        {% elif user.role == 'Creator' %}
+                            <span class="badge bg-primary text-white fw-bold">Creator</span>
+                        {% else %}
+                            <span class="badge bg-secondary text-white fw-bold">Customer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.role == 'Creator' %}
+                            {% if user.verifiedStatus %}
+                                <span class="badge bg-success text-white">Verified Profile</span>
+                            {% else %}
+                                <span class="badge bg-light text-secondary border">Unverified</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted small"><em>Not Applicable</em></span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{{ url_for('main.admin_edit_user_details', user_id=user.id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+
+                            {% if user.id != g.user.id %}
+                                <a href="{{ url_for('main.admin_toggle_user_suspension', user_id=user.id, is_suspended='False' if user.isSuspended else 'True') }}" 
+                                   class="btn btn-sm {{ 'btn-success' if user.isSuspended else 'btn-warning' }}">
+                                    {{ 'Reinstate' if user.isSuspended else 'Suspend' }}
+                                </a>
+                            {% else %}
+                                <button class="btn btn-sm btn-secondary" disabled title="Security Check: You cannot manage your own session state">Self</button>
+                            {% endif %}
+
+                            <a href="{{ url_for('main.admin_delete_user_account', user_id=user.id) }}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('CRITICAL WARNING: Are you sure you want to permanently delete this user account profile? This action will remove all linked data entries.');">
+                               Delete
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No active user account parameters found on the database cluster.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- ======================= Featured Campaigns Showcase ======================= -->
+<div class="dashboard-section mb-5">
+    <h2 class="h4 mb-3 border-bottom pb-2 text-dark">Featured Campaign</h2>
+    <p class="text-muted small">Select Campaign's to feature on Superchat Homepage.</p>
+    
+    <form action="{{ url_for('main.configure_featured_showcase') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row g-3">
+            {% for campaign in campaigns if campaign.status|lower == 'active' %}
+            <div class="col-md-4">
+                <div class="p-3 border rounded shadow-sm bg-light-subtle h-100 d-flex align-items-center">
+                    <div class="form-check w-100">
+                        <input class="form-check-input" type="checkbox" name="featured_campaigns" value="{{ campaign.id }}" id="featured_{{ campaign.id }}" {% if campaign.isFeatured %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold text-dark ps-2" for="featured_{{ campaign.id }}">
+                            {{ campaign.title }}
+                            <div class="text-muted small fw-normal">by {{ campaign.creatorName }} &bull; ${{ '{:,.2f}'.format(campaign.amountRaised) }} Raised</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12 text-center text-muted py-2">No active campaigns are currently live to be configured for showcase selection.</div>
+            {% endfor %}
+        </div>
+        <div class="text-end mt-4 border-top pt-3">
+            <button type="submit" class="btn btn-success px-4 fw-bold">Commit Featured Updates</button>
+        </div>
+    </form>
+</div>
+
+</div> 
+
+<footer class="footer mt-auto py-3 bg-light border-top">
+    <div class="container text-center">
+        <span class="text-muted small">SuperChats Crowdfunding Admin Node Dashboard v2.1 — Active Integrity Framework</span>
+    </div>
+</footer>
+
+</body>
 </html>
