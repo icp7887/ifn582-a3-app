@@ -434,6 +434,11 @@ def change_campaign_status(campaign_id):
         abort(404)
 
     new_status = (request.args.get('status') or request.form.get('status') or '').strip().lower()
+    if new_status == 'pause': new_status = 'paused'
+    if new_status == 'suspend': new_status = 'suspended'
+    if new_status == 'approve': new_status = 'active'
+    if new_status == 'reject': new_status = 'rejected'
+    
     allowed_statuses = ['active', 'rejected', 'pending', 'paused', 'suspended', 'closed']
     
     if new_status in allowed_statuses:
