@@ -1,7 +1,6 @@
 import os
 import uuid
 from datetime import date
-from functools import wraps
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, g, abort, current_app
 from . import models
@@ -9,130 +8,150 @@ from .forms import LoginForm, RegisterForm, CampaignForm, PostForm, DonationForm
 
 bp = Blueprint('main', __name__)
 
-# =====================================================================
-# AUTH HELPERS (current user + access control decorators)
-# =====================================================================
+CREATOR_STATUSES = ['Active', 'Paused', 'Closed']
+CAMPAIGN_STATUSES = ['Pending', 'Active', 'Paused', 'Closed', 'Rejected', 'Suspended']
 
-CREATOR_STATUSES = ['Active', 'Paused', 'Closed']  
-
-
-def campaign_owner_required(view):
-    """Custom ownership decorator: the logged-in creator must own the campaign in the URL.
-    Loads the campaign into g.campaign so the view does not query it again."""
-    @wraps(view)
-    @creator_required
-    def wrapped(campaign_id, *args, **kwargs):
-        campaign = models.get_campaign_detail(campaign_id)
-        if campaign is None:
-            abort(404)
-        if campaign['creatorID'] != g.user['id']:
-            abort(403)                       
-        g.campaign = campaign
-        return view(campaign_id, *args, **kwargs)
-    return wrapped
 
 @bp.before_app_request
 def load_logged_in_user():
-    user_id = session.get('user_id')
-    g.user = models.get_user_by_id(user_id) if user_id else None
+    g.user = None
+    if 'user_id' in session:
+        g.user = models.get_user_by_id(session['user_id'])
     if g.user and g.user['isSuspended']:
         session.clear()
         g.user = None
 
 
-def login_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if g.user is None:
-            flash('Please log in to continue.', 'warning')
-            return redirect(url_for('main.login'))
-        return view(*args, **kwargs)
-    return wrapped
+def require_role(role):
+    if g.user is None:
+        flash('Please log in to continue.', 'warning')
+        abort(redirect(url_for('main.login')))
+    if g.user['role'] != role:
+        abort(403)
 
 
-def role_required(*roles): 
-    def decorator(view):
-        @wraps(view)
-        @login_required
-        def wrapped(*args, **kwargs):
-            if g.user['role'] not in roles:
-                abort(403)
-            return view(*args, **kwargs)
-        return wrapped
-    return decorator
+def get_own_campaign(campaign_id):
+    require_role('Creator')
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404)
+    if campaign['creatorID'] != g.user['id']:
+        abort(403)
+    return campaign
 
-
-admin_required = role_required('Admin')
-creator_required = role_required('Creator')
-
-
-# =====================================================================
-# REGISTER
-# =====================================================================
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if g.user:
-        return redirect(url_for('main.index'))
     form = RegisterForm()
     if form.validate_on_submit():
-        username = form.username.data.strip()
-        email = form.email.data.strip().lower()
-        taken = models.username_or_email_taken(username, email)
+        taken = models.username_or_email_taken(form.username.data, form.email.data)
         if taken['username']:
             form.username.errors.append('That username is already taken.')
         if taken['email']:
             form.email.errors.append('An account with that email already exists.')
-        if not (taken['username'] or taken['email']):
-            # pbkdf2 so the hashes match the seeded accounts in database.sql
-            user_id = models.create_user(username, email, generate_password_hash(form.password.data, method='pbkdf2:sha256'), form.role.data)
-            session.clear()
-            session['user_id'] = user_id
-            flash('Welcome to Superchat, ' + username + '!', 'success')
+        if not taken['username'] and not taken['email']:
+            password_hash = generate_password_hash(form.password.data, method='pbkdf2:sha256')
+            session['user_id'] = models.create_user(form.username.data, form.email.data, password_hash, form.role.data)
+            flash('Welcome, ' + form.username.data + '!', 'success')
             return redirect(url_for('main.index'))
     return render_template('register.html', form=form)
 
 
-# =====================================================================
-# LOGIN / LOGOUT
-# =====================================================================
-
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if g.user:
-        return redirect(url_for('main.index'))
     form = LoginForm()
     if form.validate_on_submit():
-        user = models.get_user_for_login(form.identifier.data.strip())
-
-        # Passwords are stored hashed, so compare with check_password_hash
-        if user and user.get('password') and check_password_hash(user['password'], form.password.data):
-            if user['isSuspended']:
-                flash('This account has been suspended. Please contact support.', 'danger')
-            else:
-                session.clear()  # start a fresh session on login
-                session['user_id'] = user['id']
-                flash('Welcome back, ' + user['username'] + '!', 'success')
-                if user['role'] == 'Admin':
-                    return redirect(url_for('main.admin_dashboard'))
-                elif user['role'] == 'Creator':
-                    return redirect(url_for('main.campaign'))
-                else:
-                    return redirect(url_for('main.index'))
-        else:
+        user = models.get_user_for_login(form.identifier.data)
+        if user is None or not check_password_hash(user['password'], form.password.data):
             flash('Invalid username/email or password.', 'danger')
-
+        elif user['isSuspended']:
+            flash('This account has been suspended. Please contact support.', 'danger')
+        else:
+            session['user_id'] = user['id']
+            flash('Welcome, ' + user['username'] + '!', 'success')
+            if user['role'] == 'Admin':
+                return redirect(url_for('main.admin_dashboard'))
+            if user['role'] == 'Creator':
+                return redirect(url_for('main.campaign'))
+            return redirect(url_for('main.index'))
     return render_template('login.html', form=form)
 
 
-@bp.route('/logout', methods=['POST']) #POST + CSRF token so other sites can't log you out
+@bp.route('/logout', methods=['POST'])
 def logout():
-    session.clear()  # Clear all session data
+    session.clear()
     flash('You have been logged out.', 'secondary')
     return redirect(url_for('main.index'))
 
 
-def _save_image(file):
+@bp.route('/')
+def index():
+    search = request.args.get('search', '').strip()
+    selected_category = request.args.get('category', '')
+    if search:
+        campaigns = models.search_campaigns(search)
+    elif selected_category:
+        campaigns = models.get_campaigns_by_category(selected_category)
+    else:
+        campaigns = models.get_active_campaigns()
+    return render_template('index.html', campaigns=campaigns, categories=models.get_categories(),
+                           featured=models.get_featured_active_campaigns(),
+                           search=search, selected_category=selected_category)
+
+
+def get_visible_campaign(campaign_id):
+    campaign = models.get_campaign_detail(campaign_id)
+    if campaign is None:
+        abort(404)
+    if campaign['status'] not in ('Active', 'Paused', 'Closed'):
+        if g.user is None or (g.user['role'] != 'Admin' and g.user['id'] != campaign['creatorID']):
+            abort(404)
+    return campaign
+
+
+def render_donation_page(campaign, form):
+    return render_template('donation.html', campaign=campaign, form=form,
+                           tiers=models.get_creator_tiers(campaign['creatorID']),
+                           donations=models.get_campaign_donations(campaign['id']),
+                           posts=models.get_campaign_posts(campaign['id']))
+
+
+@bp.route('/donation/<int:campaign_id>')
+def campaign_donation(campaign_id):
+    campaign = get_visible_campaign(campaign_id)
+    form = DonationForm()
+    form.set_tiers(models.get_creator_tiers(campaign['creatorID']))
+    tier_id = request.args.get('tier', type=int)
+    if tier_id in form.tier_prices:
+        form.tier.data = tier_id
+        form.amount.data = form.tier_prices[tier_id]
+    return render_donation_page(campaign, form)
+
+
+@bp.route('/donation/<int:campaign_id>/donate', methods=['POST'])
+def donate(campaign_id):
+    campaign = get_visible_campaign(campaign_id)
+    if g.user is None:
+        flash('Please log in or register as a Supporter to donate.', 'warning')
+        return redirect(url_for('main.login'))
+    if g.user['role'] != 'Customer':
+        flash('Only Supporter accounts can donate.', 'warning')
+        return redirect(url_for('main.campaign_donation', campaign_id=campaign_id))
+    if campaign['status'] != 'Active':
+        flash('This campaign is not accepting donations right now.', 'warning')
+        return redirect(url_for('main.campaign_donation', campaign_id=campaign_id))
+    form = DonationForm()
+    form.set_tiers(models.get_creator_tiers(campaign['creatorID']))
+    if not form.validate_on_submit():
+        flash('Fix things below.', 'danger')
+        return render_donation_page(campaign, form)
+    models.add_donation(campaign_id, g.user['id'], form.amount.data, form.donor_name.data, form.email.data,
+                        form.address.data, form.message.data, form.tier.data or None, form.payment_method.data)
+    flash('Thank you for donating $' + str(form.amount.data) + ' to ' + campaign['title'] + '!', 'success')
+    return redirect(url_for('main.campaign_donation', campaign_id=campaign_id, _anchor='supporters'))
+
+
+def save_image(file):
     if not file or not file.filename:
         return None
     filename = uuid.uuid4().hex + '.' + file.filename.rsplit('.', 1)[-1].lower()
@@ -142,30 +161,23 @@ def _save_image(file):
     return 'img/uploads/' + filename
 
 
-def _render_creator_dashboard(campaign, campaign_form=None, post_form=None, status=200):
+def render_creator_dashboard(campaign, campaign_form=None, post_form=None):
     if campaign_form is None:
         campaign_form = CampaignForm(data={
             'title': campaign['title'], 'description': campaign['description'], 'goal': campaign['goalAmount'],
             'category': campaign['category'], 'start_date': campaign['startDate'], 'end_date': campaign['endDate']})
-    stats = models.get_campaign_stats(campaign['id'])
-    days_left = max((campaign['endDate'] - date.today()).days, 0)
-    return render_template(
-        'campaign.html',
-        campaign=campaign,
-        my_campaigns=models.get_creator_campaigns(g.user['id']),
-        stats=stats,
-        days_left=days_left,
-        donations=models.get_campaign_donations(campaign['id'], limit=1000),
-        posts=models.get_campaign_posts(campaign['id']),
-        campaign_form=campaign_form,
-        post_form=post_form or PostForm(),
-        creator_statuses=CREATOR_STATUSES,
-    ), status
+    return render_template('campaign.html', campaign=campaign,
+                           my_campaigns=models.get_creator_campaigns(g.user['id']),
+                           stats=models.get_campaign_stats(campaign['id']),
+                           days_left=max((campaign['endDate'] - date.today()).days, 0),
+                           donations=models.get_campaign_donations(campaign['id'], limit=1000),
+                           posts=models.get_campaign_posts(campaign['id']),
+                           campaign_form=campaign_form, post_form=post_form or PostForm())
 
 
 @bp.route('/campaign')
-@creator_required
 def campaign():
+    require_role('Creator')
     mine = models.get_creator_campaigns(g.user['id'])
     if not mine:
         return redirect(url_for('main.new_campaign'))
@@ -173,276 +185,153 @@ def campaign():
 
 
 @bp.route('/campaign/new', methods=['GET', 'POST'])
-@creator_required
 def new_campaign():
+    require_role('Creator')
     form = CampaignForm()
-    if request.method == 'GET':
-        form.start_date.data = date.today()
     if form.validate_on_submit():
-        image = _save_image(form.image_file.data)
-        new_id = models.create_creator_campaign(
-            g.user['id'], form.title.data.strip(), form.description.data.strip(), form.goal.data,
-            form.category.data, form.start_date.data, form.end_date.data, image)
-        flash('Campaign created! It will go public once an administrator approves it.', 'success')
+        new_id = models.create_creator_campaign(g.user['id'], form.title.data, form.description.data, form.goal.data,
+                                                form.category.data, form.start_date.data, form.end_date.data,
+                                                save_image(form.image_file.data))
+        flash('Campaign created! Admin required to approve.', 'success')
         return redirect(url_for('main.manage_campaign', campaign_id=new_id))
-    return render_template('campaign_new.html', form=form,
-                           my_campaigns=models.get_creator_campaigns(g.user['id'])), (400 if form.errors else 200)
+    return render_template('campaign_new.html', form=form)
 
 
 @bp.route('/campaign/<int:campaign_id>')
-@campaign_owner_required
 def manage_campaign(campaign_id):
-    return _render_creator_dashboard(g.campaign)
+    campaign = get_own_campaign(campaign_id)
+    return render_creator_dashboard(campaign)
 
 
 @bp.route('/campaign/<int:campaign_id>/edit', methods=['POST'])
-@campaign_owner_required
 def edit_campaign(campaign_id):
-    campaign = g.campaign
+    campaign = get_own_campaign(campaign_id)
     if campaign['status'] == 'Suspended':
-        flash('This campaign has been suspended by an administrator and cannot be edited.', 'danger')
+        flash('Campaign suspended by admin.', 'danger')
         return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
     form = CampaignForm()
     if not form.validate_on_submit():
-        flash('Please fix the highlighted fields in Campaign Settings.', 'danger')
-        return _render_creator_dashboard(campaign, campaign_form=form, status=400)
-    # keep the old image unless a new one was uploaded
-    image = _save_image(form.image_file.data) or campaign['campaignImage']
-    models.update_campaign_details(campaign_id, form.title.data.strip(), form.description.data.strip(),
-                                   form.goal.data, form.category.data, form.start_date.data,
-                                   form.end_date.data, image)
+        flash('Fix things in Campaign Settings.', 'danger')
+        return render_creator_dashboard(campaign, campaign_form=form)
+    image = save_image(form.image_file.data) or campaign['campaignImage']
+    models.update_campaign_details(campaign_id, form.title.data, form.description.data, form.goal.data,
+                                   form.category.data, form.start_date.data, form.end_date.data, image)
     flash('Campaign details saved.', 'success')
-    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='settings'))
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
 
 
 @bp.route('/campaign/<int:campaign_id>/status', methods=['POST'])
-@campaign_owner_required
 def creator_set_status(campaign_id):
-    campaign = g.campaign
+    campaign = get_own_campaign(campaign_id)
     new_status = request.form.get('status')
     if campaign['status'] not in CREATOR_STATUSES:
-        flash(f'This campaign is {campaign["status"]}. Only an administrator can change that.', 'danger')
+        flash('This campaign is ' + campaign['status'] + '. Only an administrator can change that.', 'danger')
     elif new_status not in CREATOR_STATUSES:
         abort(400)
     else:
         models.update_campaign_status(campaign_id, new_status)
-        flash(f'Campaign is now {new_status}.', 'success')
-    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='status'))
+        flash('Campaign is now ' + new_status + '.', 'success')
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
 
 
-# ---------- campaign posts / updates ----------
-def _owned_post_or_404(campaign_id, post_id):
+def get_own_post(campaign_id, post_id):
     post = models.get_post(post_id)
-    if post is None or post['campaignID'] != campaign_id:   # post must belong to this (owned) campaign
+    if post is None or post['campaignID'] != campaign_id:
         abort(404)
     return post
 
 
 @bp.route('/campaign/<int:campaign_id>/posts', methods=['POST'])
-@campaign_owner_required
 def add_post(campaign_id):
+    campaign = get_own_campaign(campaign_id)
     form = PostForm()
     if not form.validate_on_submit():
-        flash('Please fix the highlighted fields in Campaign Updates.', 'danger')
-        return _render_creator_dashboard(g.campaign, post_form=form, status=400)
-    models.add_post(campaign_id, form.title.data.strip(), form.content.data.strip(), _save_image(form.image.data))
+        flash('Fix things in Campaign Updates.', 'danger')
+        return render_creator_dashboard(campaign, post_form=form)
+    models.add_post(campaign_id, form.title.data, form.content.data, save_image(form.image.data))
     flash('Update posted.', 'success')
-    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='updates'))
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
 
 
 @bp.route('/campaign/<int:campaign_id>/posts/<int:post_id>/edit', methods=['GET', 'POST'])
-@campaign_owner_required
 def edit_post(campaign_id, post_id):
-    post = _owned_post_or_404(campaign_id, post_id)
-    form = PostForm(data={'title': post['title'], 'content': post['content']} if request.method == 'GET' else None)
+    campaign = get_own_campaign(campaign_id)
+    post = get_own_post(campaign_id, post_id)
+    form = PostForm(data=post if request.method == 'GET' else None)
     if form.validate_on_submit():
-        image = _save_image(form.image.data) or (None if form.remove_image.data else post['postImage'])
-        models.update_post(post_id, form.title.data.strip(), form.content.data.strip(), image)
+        image = save_image(form.image.data) or post['postImage']
+        models.update_post(post_id, form.title.data, form.content.data, image)
         flash('Update saved.', 'success')
-        return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='updates'))
-    return render_template('campaign_post_edit.html', form=form, post=post, campaign=g.campaign), (400 if form.errors else 200)
+        return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
+    return render_template('campaign_post_edit.html', form=form, post=post, campaign=campaign)
 
 
 @bp.route('/campaign/<int:campaign_id>/posts/<int:post_id>/delete', methods=['POST'])
-@campaign_owner_required
 def delete_post(campaign_id, post_id):
-    _owned_post_or_404(campaign_id, post_id)
+    campaign = get_own_campaign(campaign_id)
+    get_own_post(campaign_id, post_id)
     models.delete_post(post_id)
     flash('Update deleted.', 'info')
-    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id, _anchor='updates'))
-
-# =====================================================================
-# HOMEPAGE (search, categories, featured campaigns, campaign list)
-# =====================================================================
-
-HOMEPAGE_CAMPAIGN_LIMIT = 3   # Campaigns shown before "SHOW ALL" is clicked
+    return redirect(url_for('main.manage_campaign', campaign_id=campaign_id))
 
 
-@bp.route('/')
-def index():
-    search = request.args.get('search', '').strip()
-    selected_category = request.args.get('category', '').strip()
-    if search:
-        campaigns = models.search_campaigns(search)
-    elif selected_category:
-        campaigns = models.get_campaigns_by_category(selected_category)
-    else:
-        campaigns = models.get_active_campaigns()
-
-    categories = models.get_categories()
-    featured = models.get_featured_active_campaigns()
-
-    show_all = request.args.get('show') == 'all'
-    total_campaigns = len(campaigns)    
-    if not show_all:
-        campaigns = campaigns[:HOMEPAGE_CAMPAIGN_LIMIT]
-
-    return render_template(
-        'index.html',
-        campaigns=campaigns,
-        categories=categories,
-        featured=featured,                       
-        search=search,                           
-        selected_category=selected_category,     
-        total_campaigns=total_campaigns,
-        limit=HOMEPAGE_CAMPAIGN_LIMIT,
-        show_all=show_all,                       
-    )
-
-
-# =====================================================================
-# DONATION
-# =====================================================================
-
-
-def _visible_campaign_or_404(campaign_id):
-    campaign = models.get_campaign_detail(campaign_id)
-    if campaign is None:
-        abort(404)
-    if campaign['status'] not in ('Active', 'Paused', 'Closed'):
-        is_owner = g.user is not None and g.user['id'] == campaign['creatorID']
-        is_admin = g.user is not None and g.user['role'] == 'Admin'
-        if not (is_owner or is_admin):
-            abort(404)
-    return campaign
-
-
-def _render_donation_page(campaign, form, status=200):
-    tiers = models.get_creator_tiers(campaign['creatorID'])
-    return render_template('donation.html', campaign=campaign, form=form, tiers=tiers,
-                           donations=models.get_campaign_donations(campaign['id']),
-                           posts=models.get_campaign_posts(campaign['id'])), status
-
-
-@bp.route('/donation/<int:campaign_id>')
-def campaign_donation(campaign_id):
-    campaign = _visible_campaign_or_404(campaign_id)
-    form = DonationForm()
-    form.set_tiers(models.get_creator_tiers(campaign['creatorID']))
-    if g.user and g.user['role'] == 'Customer':
-        form.donor_name.data = g.user['username']
-        form.email.data = g.user['email']
-    tier_id = request.args.get('tier', type=int)
-    if tier_id in form.tier_prices:
-        form.tier.data = tier_id
-        form.amount.data = form.tier_prices[tier_id]
-    return _render_donation_page(campaign, form)
-
-
-@bp.route('/donation/<int:campaign_id>/donate', methods=['POST'])
-def donate(campaign_id):
-    campaign = _visible_campaign_or_404(campaign_id)
-    page = url_for('main.campaign_donation', campaign_id=campaign_id)
-    if g.user is None:
-        flash('Please log in or register as a Supporter to donate.', 'warning')
-        return redirect(url_for('main.login'))
-    if g.user['role'] != 'Customer':
-        flash('Only Supporter accounts can donate.', 'warning')
-        return redirect(page + '#donate')
-    if campaign['status'] != 'Active':
-        flash('This campaign is not accepting donations right now.', 'warning')
-        return redirect(page)
-    form = DonationForm()
-    form.set_tiers(models.get_creator_tiers(campaign['creatorID']))
-    if not form.validate_on_submit():
-        flash('Please fix the highlighted fields below.', 'danger')
-        return _render_donation_page(campaign, form, status=400)
-    models.add_donation(campaign_id, g.user['id'], form.amount.data, form.donor_name.data.strip(),
-                        form.email.data.strip().lower(), form.address.data.strip(),
-                        (form.message.data or '').strip() or None, form.tier.data or None, form.payment_method.data)
-    flash(f'Thank you for donating ${form.amount.data:,.2f} to {campaign["title"]}!', 'success')
-    return redirect(page + '#supporters')
-
-
-# =====================================================================
-# ADMIN (every route here is Admin only)
-# =====================================================================
-
-CAMPAIGN_STATUSES = ['Pending', 'Active', 'Paused', 'Closed', 'Rejected', 'Suspended']
-
-
-#admin dashboard url route
 @bp.route('/admin')
-@admin_required
 def admin_dashboard():
-    return render_template(
-        'admin_dashboard.html',
-        pending=models.get_all_campaigns_with_creator(),    
-        campaigns=models.get_all_campaigns_with_details(),  
-        users=models.get_all_users(),                       
-        reports=models.get_open_reports(),                  
-        featured_options=models.get_active_campaigns(),     
-    )
+    require_role('Admin')
+    return render_template('admin_dashboard.html',
+                           pending=models.get_all_campaigns_with_creator(),
+                           campaigns=models.get_all_campaigns_with_details(),
+                           users=models.get_all_users(),
+                           reports=models.get_open_reports(),
+                           featured_options=models.get_active_campaigns())
 
 
-
-@bp.route('/admin/approve/<int:campaign_id>', methods=['POST']) 
-@admin_required
+@bp.route('/admin/approve/<int:campaign_id>', methods=['POST'])
 def approve_campaign(campaign_id):
-    models.update_campaign_status(campaign_id, 'Active') 
+    require_role('Admin')
+    models.update_campaign_status(campaign_id, 'Active')
     flash('Campaign approved.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='approval'))
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/reject/<int:campaign_id>', methods=['POST']) 
-@admin_required
+@bp.route('/admin/reject/<int:campaign_id>', methods=['POST'])
 def reject_campaign(campaign_id):
+    require_role('Admin')
     models.update_campaign_status(campaign_id, 'Rejected')
     flash('Campaign rejected.', 'secondary')
-    return redirect(url_for('main.admin_dashboard', _anchor='approval'))
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/status/<int:campaign_id>', methods=['POST']) 
-@admin_required
+@bp.route('/admin/status/<int:campaign_id>', methods=['POST'])
 def admin_set_campaign_status(campaign_id):
+    require_role('Admin')
     status = request.form.get('status')
     if status not in CAMPAIGN_STATUSES:
         abort(400)
     models.update_campaign_status(campaign_id, status)
     flash('Campaign status set to ' + status + '.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='campaigns'))
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/featured', methods=['POST']) 
-@admin_required
+@bp.route('/admin/featured', methods=['POST'])
 def admin_set_featured():
-    ids = [int(i) for i in request.form.getlist('featured') if i.isdigit()]
-    models.set_featured_campaigns(ids)
+    require_role('Admin')
+    models.set_featured_campaigns(request.form.getlist('featured'))
     flash('Featured campaigns updated.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='featured'))
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/delete/<int:campaign_id>', methods=['POST']) 
-@admin_required
+@bp.route('/admin/delete/<int:campaign_id>', methods=['POST'])
 def admin_delete_campaign(campaign_id):
+    require_role('Admin')
     models.delete_campaign(campaign_id)
-    flash('Campaign deleted.', 'secondary')
-    return redirect(url_for('main.admin_dashboard', _anchor='campaigns'))
+    flash('Campaign removed.', 'secondary')
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/report/<int:report_id>/<action>', methods=['POST']) 
-@admin_required
+@bp.route('/admin/report/<int:report_id>/<action>', methods=['POST'])
 def admin_review_report(report_id, action):
+    require_role('Admin')
     report = models.get_report_by_id(report_id)
     if report is None:
         abort(404)
@@ -452,53 +341,48 @@ def admin_review_report(report_id, action):
         models.update_campaign_status(report['campaignID'], 'Suspended')
         models.set_report_status(report_id, 'Resolved')
     elif action == 'remove':
-        models.delete_campaign(report['campaignID']) 
+        models.delete_campaign(report['campaignID'])
     else:
         abort(400)
     flash('Report reviewed.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='reports'))
+    return redirect(url_for('main.admin_dashboard'))
 
 
 @bp.route('/admin/user/<int:user_id>/edit', methods=['GET', 'POST'])
-@admin_required
 def admin_edit_user(user_id):
+    require_role('Admin')
     user = models.get_user_by_id(user_id)
     if user is None:
         abort(404)
-    form = AdminUserForm(data={'username': user['username'], 'email': user['email'],
-                               'verified': bool(user['verifiedStatus'])} if request.method == 'GET' else None)
+    form = AdminUserForm(data=user if request.method == 'GET' else None)
     if form.validate_on_submit():
-        username = form.username.data.strip()
-        email = form.email.data.strip().lower()
-        if models.taken_by_other_user(username, email, user_id):
-            flash('Another account already uses that username or email.', 'danger')
+        if models.taken_by_other_user(form.username.data, form.email.data, user_id):
+            flash('Sorry username or email already taken.', 'danger')
         else:
-            models.update_user_details(user_id, username, email)
-            if user['role'] == 'Creator':
-                models.set_creator_verified(user_id, form.verified.data)
-            flash('Account details for ' + username + ' saved.', 'success')
-            return redirect(url_for('main.admin_dashboard', _anchor='users'))
-    return render_template('admin_edit_user.html', form=form, user=user), (400 if form.errors else 200)
+            models.update_user_details(user_id, form.username.data, form.email.data)
+            flash('Account details for ' + form.username.data + ' saved.', 'success')
+            return redirect(url_for('main.admin_dashboard'))
+    return render_template('admin_edit_user.html', form=form, user=user)
 
 
-@bp.route('/admin/user/<int:user_id>/suspend', methods=['POST']) 
-@admin_required
+@bp.route('/admin/user/<int:user_id>/suspend', methods=['POST'])
 def admin_suspend_user(user_id):
-    if user_id == g.user['id']: 
+    require_role('Admin')
+    if user_id == g.user['id']:
         flash('You cannot suspend your own account.', 'danger')
     else:
         suspend = request.form.get('suspend') == '1'
         models.set_user_suspended(user_id, suspend)
         flash('User suspended.' if suspend else 'User reinstated.', 'success')
-    return redirect(url_for('main.admin_dashboard', _anchor='users'))
+    return redirect(url_for('main.admin_dashboard'))
 
 
-@bp.route('/admin/delete_user/<int:user_id>', methods=['POST']) 
-@admin_required
+@bp.route('/admin/delete_user/<int:user_id>', methods=['POST'])
 def admin_delete_user(user_id):
-    if user_id == g.user['id']: 
+    require_role('Admin')
+    if user_id == g.user['id']:
         flash('You cannot delete your own account.', 'danger')
     else:
         models.delete_user(user_id)
-        flash('User deleted.', 'secondary')
-    return redirect(url_for('main.admin_dashboard', _anchor='users'))
+        flash('User removed.', 'secondary')
+    return redirect(url_for('main.admin_dashboard'))

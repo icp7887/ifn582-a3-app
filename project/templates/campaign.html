@@ -43,8 +43,8 @@
         </div>
         </nav>
 
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% for category, alert in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ alert }}</div>
         {% endfor %}
 
     
@@ -149,7 +149,7 @@
 
             <div id="status" class="card border border-success border-3 p-4 mb-4">
                 <h2 class="titleLook">Campaign Status</h2>
-                {% if campaign.status in creator_statuses %}
+                {% if campaign.status in ['Active', 'Paused', 'Closed'] %}
                 <p class="fs-4 fw-light">Current status: <strong>{{ campaign.status }}</strong></p>
                 <form method="post" action="{{ url_for('main.creator_set_status', campaign_id=campaign.id) }}" class="d-flex flex-wrap gap-2 align-items-center">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

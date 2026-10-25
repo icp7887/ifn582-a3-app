@@ -68,8 +68,8 @@
     </nav>
 
 
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% for category, alert in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ alert }}</div>
         {% endfor %}
 
         {% set pct = (campaign.raised / campaign.goalAmount * 100)|round|int %}

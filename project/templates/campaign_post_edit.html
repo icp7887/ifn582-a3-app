@@ -42,8 +42,8 @@
         </div>
         </nav>
 
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% for category, alert in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ alert }}</div>
         {% endfor %}
 
 
@@ -66,15 +66,6 @@
                         {{ form.content(class="form-control", rows=5) }}
                         {% for e in form.content.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
-                    {% if post.postImage %}
-                    <div class="mb-3">
-                        <img src="{{ post.postImage if post.postImage.startswith('http') else url_for('static', filename=post.postImage) }}" alt="{{ post.title }}" style="max-width: 260px; max-height: 160px; object-fit: cover; border-radius: 0.5rem;">
-                        <div class="form-check mt-2">
-                            {{ form.remove_image(class="form-check-input") }}
-                            {{ form.remove_image.label(class="form-check-label") }}
-                        </div>
-                    </div>
-                    {% endif %}
                     <div class="mb-3">
                         {{ form.image.label(class="form-label fs-4 fw-light") }}
                         {{ form.image(class="form-control") }}

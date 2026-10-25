@@ -40,8 +40,8 @@
 
         </nav>
 
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% for category, alert in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ alert }}</div>
         {% endfor %}
 
         <div class="container-fluid px-4 py-4" style="max-width: 800px;">
@@ -63,12 +63,6 @@
                         {% for e in form.email.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
 
-                    {% if user.role == 'Creator' %}
-                    <div class="form-check mb-3">
-                        {{ form.verified(class="form-check-input") }}
-                        {{ form.verified.label(class="form-check-label") }}
-                    </div>
-                    {% endif %}
 
                     {{ form.submit(class="btn btn-success") }}
                     <a href="{{ url_for('main.admin_dashboard', _anchor='users') }}" class="btn btn-link text-muted">Cancel</a>

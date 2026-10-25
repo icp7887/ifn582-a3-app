@@ -24,8 +24,8 @@
             <p class="text-secondary">Join Superchat as a supporter or creator</p>
         </div>
 
-        {% for category, msg in get_flashed_messages(with_categories=true) %}
-        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% for category, alert in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ alert }}</div>
         {% endfor %}
 
 
