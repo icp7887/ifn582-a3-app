@@ -42,50 +42,57 @@
         </div>
         </nav>
 
-        {% include '_flashes.html' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
-        {% set label = 'font-weight: 300; font-size: 1.5rem;' %}
-        {% set f = form %}
 
         <div class="container-fluid px-4 py-4" style="max-width: 900px;">
 
             {% if my_campaigns %}
-            <a href="{{ url_for('main.campaign') }}" class="text-muted">&larr; Back to my campaigns</a>
+            <a href="{{ url_for('main.campaign') }}" class="text-muted">&larr; Back</a>
             {% endif %}
             <h1 class="fontLook mt-2">New Campaign</h1>
-            <p class="description">New campaigns are reviewed by an administrator before they go public</p>
+            <p class="description">New campaigns are reviewed by admin then go public</p>
 
-            <div style="border: 3px green solid;" class="card p-4">
+            <div class="card border border-success border-3 p-4">
                 <form method="post" enctype="multipart/form-data" novalidate>
-                    {{ f.hidden_tag() }}
+                    {{ form.hidden_tag() }}
                     <div class="mb-3">
-                        {{ f.title.label(class="form-label", style=label) }}
-                        {{ f.title(class="form-control" + (" is-invalid" if f.title.errors else ""), placeholder="e.g. Clean Water for Schools") }}
-                        {% if f.title.errors %}<div class="invalid-feedback">{{ f.title.errors[0] }}</div>{% endif %}
+                        {{ form.title.label(class="form-label fs-4 fw-light") }}
+                        {{ form.title(class="form-control", placeholder="e.g. Water Project") }}
+                        {% for e in form.title.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="mb-3">
-                        {{ f.description.label(class="form-label", style=label) }}
-                        {{ f.description(class="form-control" + (" is-invalid" if f.description.errors else ""), rows=4, placeholder="What is the money for, and what will it achieve?") }}
-                        {% if f.description.errors %}<div class="invalid-feedback">{{ f.description.errors[0] }}</div>{% endif %}
+                        {{ form.description.label(class="form-label fs-4 fw-light") }}
+                        {{ form.description(class="form-control", rows=4, placeholder="Please provide description of campaign") }}
+                        {% for e in form.description.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="row g-3">
-                        {% for field, kind in [(f.goal, 'text'), (f.category, 'select'), (f.start_date, 'date'), (f.end_date, 'date')] %}
                         <div class="col-md-6">
-                            {{ field.label(class="form-label", style=label) }}
-                            {% if kind == 'select' %}
-                            {{ field(class="form-select" + (" is-invalid" if field.errors else "")) }}
-                            {% elif kind == 'date' %}
-                            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), type="date") }}
-                            {% else %}
-                            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), inputmode="decimal", placeholder="5000") }}
-                            {% endif %}
-                            {% if field.errors %}<div class="invalid-feedback">{{ field.errors[0] }}</div>{% endif %}
+                            {{ form.goal.label(class="form-label fs-4 fw-light") }}
+                            {{ form.goal(class="form-control", placeholder="5000") }}
+                            {% for e in form.goal.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                         </div>
-                        {% endfor %}
                         <div class="col-md-6">
-                            {{ f.image_file.label(class="form-label", style=label) }}
-                            {{ f.image_file(class="form-control" + (" is-invalid" if f.image_file.errors else ""), accept="image/*") }}
-                            {% if f.image_file.errors %}<div class="invalid-feedback">{{ f.image_file.errors[0] }}</div>{% endif %}
+                            {{ form.category.label(class="form-label fs-4 fw-light") }}
+                            {{ form.category(class="form-select") }}
+                            {% for e in form.category.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.start_date.label(class="form-label fs-4 fw-light") }}
+                            {{ form.start_date(class="form-control") }}
+                            {% for e in form.start_date.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.end_date.label(class="form-label fs-4 fw-light") }}
+                            {{ form.end_date(class="form-control") }}
+                            {% for e in form.end_date.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.image_file.label(class="form-label fs-4 fw-light") }}
+                            {{ form.image_file(class="form-control") }}
+                            {% for e in form.image_file.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success mt-4">Create Campaign</button>

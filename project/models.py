@@ -269,22 +269,6 @@ def set_user_suspended(user_id, is_suspended): #suspended users cannot log in
 # ADMIN DASHBOARD + CAMPAIGN / USER MANAGEMENT
 # =====================================================================
 
-def get_dashboard_counts(): #counts for the 4 stat cards at the top of the admin page (Pending, Active, Flagged Items, Users)
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT 
-            SUM(status = 'Pending') AS pending, 
-            SUM(status = 'Active') AS active
-        FROM campaign
-    """)
-    counts = cur.fetchone()
-    cur.execute("SELECT COUNT(*) AS reports FROM report WHERE status = 'Open'") #open reports are the "Flagged Items"
-    counts['reports'] = cur.fetchone()['reports']
-    cur.execute("SELECT COUNT(*) AS users, SUM(isSuspended) AS suspended FROM user")
-    counts.update(cur.fetchone())
-    cur.close()
-    return {key: int(value or 0) for key, value in counts.items()} #SUM() returns None on an empty table and a Decimal otherwise, so convert every value to a plain whole number
-
 def get_all_campaigns_with_creator(): #for the Approval of Campains section: pending campaigns plus the creator's username for each card
     cur = mysql.connection.cursor()
     cur.execute("""
@@ -298,17 +282,12 @@ def get_all_campaigns_with_creator(): #for the Approval of Campains section: pen
     cur.close()
     return rows
 
-def get_all_campaigns_with_details(): 
+def get_all_campaigns_with_details():
     cur = mysql.connection.cursor()
     cur.execute("""
-        SELECT 
-            c.*,
-            u.username AS creatorName,
-            COALESCE(SUM(d.amount), 0) AS amountRaised
+        SELECT c.*, u.username AS creatorName
         FROM campaign c
         JOIN user u ON c.creatorID = u.id
-        LEFT JOIN donation d ON d.campaignID = c.id AND d.status = 'Done'
-        GROUP BY c.id, u.username
         ORDER BY c.id
     """)
     rows = cur.fetchall()
@@ -334,24 +313,15 @@ def delete_user(user_id):
 # =====================================================================
 
 _REPORTS = """
-    SELECT r.*, c.title AS campaignTitle, c.status AS campaignStatus, u.username AS reporterName
+    SELECT r.*, c.title AS campaignTitle
     FROM report r
     JOIN campaign c ON c.id = r.campaignID
-    LEFT JOIN user u ON u.id = r.reporterID
 """
 
 
 def get_open_reports():
     cur = mysql.connection.cursor()
     cur.execute(_REPORTS + " WHERE r.status = 'Open' ORDER BY r.reportedAt")
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
-
-def get_reviewed_reports(limit=5):
-    cur = mysql.connection.cursor()
-    cur.execute(_REPORTS + " WHERE r.status <> 'Open' ORDER BY r.reviewedAt DESC LIMIT %s", (limit,))
     rows = cur.fetchall()
     cur.close()
     return rows

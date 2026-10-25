@@ -12,7 +12,7 @@
         <body class="dashboard-page">
 
         <nav class="navbar bg-white border-bottom">
-        
+
         <div class="container-fluid">
             <div class="addMargin">
               <a class="navbar-brand" href="{{ url_for('main.index') }}">
@@ -20,16 +20,15 @@
                         src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/500px-Superman_shield.svg.png">
                 </a>
             <span style = "margin-left: 26px;" class="badge bg-danger">Admin</span>
-        <br><br> 
-        </a>
-    
+        <br><br>
+
         </div>
 
         <form method="post" action="{{ url_for('main.logout') }}" class="m-0 d-flex align-items-center gap-2" style="margin-right: 26px !important;">
             <span>{{ g.user.username }}</span>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-outline-dark btn-sm" title="Log out">
-            
+
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
             <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
@@ -42,247 +41,154 @@
 
         </nav>
 
-        {% include '_flashes.html' %}
-
-        {% set status_badges = {'Active': 'bg-success', 'Pending': 'bg-warning text-dark', 'Paused': 'bg-info text-dark', 'Closed': 'bg-dark',
-                                'Suspended': 'bg-secondary', 'Rejected': 'bg-danger'} %}
-        {% set sub = 'font-weight: 300; font-size: 1.5rem;' %}
-        {% set card_title = 'font-weight: 300; font-size: 1.7rem;' %}
-        {% set money = '{:,.0f}' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
         <div class="container-fluid px-4 py-4" style="max-width: 1200px;">
 
             <h1 class="fontLook">Admin Dashboard</h1>
             <p class="description">Approve, manage and moderate campaigns and user accounts</p>
 
-            <!-- Stat cards -->
-            <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
-                <div class="col">
-                    <a href="#approval" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p class="number">{{ counts.pending }}</p>
-                        <p style="{{ sub }}" class="form-label">Pending</p>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="#campaigns" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p class="number">{{ counts.active }}</p>
-                        <p style="{{ sub }}" class="form-label">Active</p>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="#reports" style="border: 2px red solid;" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p style="color:red" class="number">{{ counts.reports }}</p>
-                        <p style="{{ sub }}" class="form-label">Flagged Items</p>
-                    </a>
-                </div>
-                <div class="col">
-                    <a href="#users" class="card text-center p-3 h-100 text-decoration-none text-dark">
-                        <p class="number">{{ counts.users }}</p>
-                        <p style="{{ sub }}" class="form-label">Users{% if counts.suspended %} <small class="text-muted">({{ counts.suspended }} suspended)</small>{% endif %}</p>
-                    </a>
-                </div>
-            </div>
 
-
-            <!-- Approve / reject new campaigns -->
-            <div id="approval" style="border: 3px green solid;" class="card p-4 mb-4">
+            <div id="approval" class="card border border-success border-3 p-4 mb-4">
                 <h2 class="titleLook">Approval of Campaigns</h2>
-                <p style="{{ sub }}">New campaigns stay hidden from the public until they are approved</p>
+                <p class="fs-4 fw-light">New campaigns stay hidden from the public until they are approved</p>
 
-                <div class="row row-cols-1 row-cols-md-2 g-3">
-                    {% for c in pending %}
-                    <div class="col">
-                        <div class="card h-100 p-3" style="font-weight: 300; font-size: 1.3rem;">
-                            <h3 class="text-muted" style="{{ card_title }}">
-                                <a class="text-reset" href="{{ url_for('main.campaign_donation', campaign_id=c.id) }}">{{ c.title }}</a>
-                            </h3>
-                            <div class="row text-muted g-2 mb-3">
-                                <div class="col-6"><strong class="d-block text-dark">Creator</strong>{{ c.creatorName }}</div>
-                                <div class="col-6"><strong class="d-block text-dark">Category</strong>{{ c.category }}</div>
-                                <div class="col-6"><strong class="d-block text-dark">Goal</strong>${{ money.format(c.goalAmount) }}</div>
-                                <div class="col-6"><strong class="d-block text-dark">Runs</strong>{{ c.startDate.strftime('%d %b') }} &ndash; {{ c.endDate.strftime('%d %b %Y') }}</div>
-                            </div>
-                            <div class="d-flex gap-2 justify-content-between mt-auto">
-                                <form method="post" action="{{ url_for('main.reject_campaign', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm">Reject</button>
-                                </form>
-                                <form method="post" action="{{ url_for('main.approve_campaign', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-success btn-sm">Approve</button>
-                                </form>
-                            </div>
-                        </div>
+                {% for c in pending %}
+                <div class="card p-3 mb-3 fs-5 fw-light">
+                    <h3 class="fs-3 fw-light"><a class="text-reset" href="{{ url_for('main.campaign_donation', campaign_id=c.id) }}">{{ c.title }}</a></h3>
+                    <p>By {{ c.creatorName }} &middot; {{ c.category }} &middot; Goal ${{ c.goalAmount }}</p>
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{{ url_for('main.approve_campaign', campaign_id=c.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-success btn-sm">Approve</button>
+                        </form>
+                        <form method="post" action="{{ url_for('main.reject_campaign', campaign_id=c.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-danger btn-sm">Reject</button>
+                        </form>
                     </div>
-                    {% else %}
-                    <p class="text-muted" style="font-size: 1.2rem;">No campaigns are waiting for approval.</p>
-                    {% endfor %}
                 </div>
+                {% else %}
+                <p class="text-muted fs-5">No campaigns are waiting for approval.</p>
+                {% endfor %}
             </div>
 
 
-            <!-- Manage every campaign -->
-            <div id="campaigns" style="border: 3px green solid;" class="card p-4 mb-4">
+            <div id="campaigns" class="card border border-success border-3 p-4 mb-4">
                 <h2 class="titleLook">Campaign Management</h2>
-                <p style="{{ sub }}">Change a campaign's status, suspend it or remove it</p>
+                <p class="fs-4 fw-light">Change a campaign's status, suspend it or remove it</p>
 
-                <div class="row row-cols-1 row-cols-md-2 g-3" style="font-weight: 300; font-size: 1.3rem;">
-                    {% for c in campaigns %}
-                    <div class="col">
-                        <div class="card h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
-                                <h3 style="{{ card_title }}">
-                                    <a class="text-reset" href="{{ url_for('main.campaign_donation', campaign_id=c.id) }}">{{ c.title }}</a>
-                                </h3>
-                                <div class="text-nowrap">
-                                    {% if c.isFeatured %}<span class="badge bg-warning text-dark">Featured</span>{% endif %}
-                                    <span class="badge {{ status_badges.get(c.status, 'bg-secondary') }}">{{ c.status }}</span>
-                                </div>
-                            </div>
-                            <div class="text-muted mb-3">{{ c.creatorName }} - ${{ money.format(c.amountRaised) }} raised of ${{ money.format(c.goalAmount) }}</div>
-
-                            <div class="d-flex flex-wrap align-items-center gap-2 mt-auto">
-                                <form method="post" action="{{ url_for('main.admin_set_campaign_status', campaign_id=c.id) }}" class="d-flex gap-2">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <label class="visually-hidden" for="status-{{ c.id }}">Status</label>
-                                    <select id="status-{{ c.id }}" name="status" class="form-select form-select-sm w-auto">
-                                        {% for st in statuses %}<option {% if st == c.status %}selected{% endif %}>{{ st }}</option>{% endfor %}
-                                    </select>
-                                    <button class="btn btn-outline-secondary btn-sm">Update</button>
-                                </form>
-                                <form method="post" action="{{ url_for('main.admin_set_campaign_status', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    {% if c.status == 'Suspended' %}
-                                    <input type="hidden" name="status" value="Active">
-                                    <button class="btn btn-outline-success btn-sm">Reinstate</button>
-                                    {% else %}
-                                    <input type="hidden" name="status" value="Suspended">
-                                    <button class="btn btn-outline-warning btn-sm">Suspend</button>
-                                    {% endif %}
-                                </form>
-                                <form method="post" action="{{ url_for('main.admin_delete_campaign', campaign_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                            </div>
-                        </div>
+                {% for c in campaigns %}
+                <div class="card p-3 mb-3 fs-5 fw-light">
+                    <h3 class="fs-3 fw-light">{{ c.title }}</h3>
+                    <p>By {{ c.creatorName }} &middot; Status: <strong>{{ c.status }}</strong></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="post" action="{{ url_for('main.admin_set_campaign_status', campaign_id=c.id) }}" class="d-flex gap-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <select name="status" class="form-select form-select-sm w-auto">
+                                <option>Pending</option>
+                                <option>Active</option>
+                                <option>Paused</option>
+                                <option>Closed</option>
+                                <option>Rejected</option>
+                                <option>Suspended</option>
+                            </select>
+                            <button class="btn btn-outline-secondary btn-sm">Update</button>
+                        </form>
+                        <form method="post" action="{{ url_for('main.admin_set_campaign_status', campaign_id=c.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if c.status == 'Suspended' %}
+                            <input type="hidden" name="status" value="Active">
+                            <button class="btn btn-outline-success btn-sm">Reinstate</button>
+                            {% else %}
+                            <input type="hidden" name="status" value="Suspended">
+                            <button class="btn btn-outline-warning btn-sm">Suspend</button>
+                            {% endif %}
+                        </form>
+                        <form method="post" action="{{ url_for('main.admin_delete_campaign', campaign_id=c.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-danger btn-sm">Remove</button>
+                        </form>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
 
 
-            <!-- Manage user accounts -->
-            <div id="users" style="border: 3px green solid;" class="card p-4 mb-4">
+            <div id="users" class="card border border-success border-3 p-4 mb-4">
                 <h2 class="titleLook">User Management</h2>
-                <p style="{{ sub }}">Edit account details, or suspend and remove accounts that break your terms</p>
+                <p class="fs-4 fw-light">Edit account details, or suspend and remove accounts</p>
 
-                <div class="row row-cols-1 row-cols-md-2 g-3" style="font-weight: 300; font-size: 1.3rem;">
-                    {% for u in users %}
-                    {% set is_me = u.id == g.user.id %}
-                    <div class="col">
-                        <div class="card h-100 p-3">
-                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
-                                <h3 style="{{ card_title }}">{{ u.username }}{% if is_me %} <small class="text-muted">(you)</small>{% endif %}</h3>
-                                <div class="text-nowrap">
-                                    {% if u.role == 'Creator' and u.verifiedStatus %}<span class="badge bg-primary">Verified</span>{% endif %}
-                                    {% if u.isSuspended %}<span class="badge bg-secondary">Suspended</span>{% else %}<span class="badge bg-success">Active</span>{% endif %}
-                                </div>
-                            </div>
-                            <div class="text-muted mb-3">{{ u.email }} - {{ u.accessLevel if u.role == 'Admin' else ('Supporter' if u.role == 'Customer' else u.role) }}</div>
-
-                            <div class="d-flex flex-wrap gap-2 mt-auto">
-                                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('main.admin_edit_user', user_id=u.id) }}">Edit</a>
-                                {% if not is_me %}
-                                <form method="post" action="{{ url_for('main.admin_suspend_user', user_id=u.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    {% if u.isSuspended %}
-                                    <input type="hidden" name="suspend" value="0">
-                                    <button class="btn btn-outline-success btn-sm">Reinstate</button>
-                                    {% else %}
-                                    <input type="hidden" name="suspend" value="1">
-                                    <button class="btn btn-outline-warning btn-sm">Suspend</button>
-                                    {% endif %}
-                                </form>
-                                <form method="post" action="{{ url_for('main.admin_delete_user', user_id=u.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn btn-outline-danger btn-sm">Delete</button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
+                {% for u in users %}
+                <div class="card p-3 mb-3 fs-5 fw-light">
+                    <h3 class="fs-3 fw-light">{{ u.username }}</h3>
+                    <p>{{ u.email }} &middot; {{ u.role }}{% if u.isSuspended %} &middot; <strong>Suspended</strong>{% endif %}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('main.admin_edit_user', user_id=u.id) }}">Edit</a>
+                        <form method="post" action="{{ url_for('main.admin_suspend_user', user_id=u.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if u.isSuspended %}
+                            <input type="hidden" name="suspend" value="0">
+                            <button class="btn btn-outline-success btn-sm">Reinstate</button>
+                            {% else %}
+                            <input type="hidden" name="suspend" value="1">
+                            <button class="btn btn-outline-warning btn-sm">Suspend</button>
+                            {% endif %}
+                        </form>
+                        <form method="post" action="{{ url_for('main.admin_delete_user', user_id=u.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-danger btn-sm">Remove</button>
+                        </form>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
 
 
-            <!-- Reported content -->
-            <div id="reports" style="border: 3px red solid;" class="card p-4 mb-4">
+            <div id="reports" class="card border border-danger border-3 p-4 mb-4">
                 <h2 class="titleLook">Flagged Content</h2>
-                <p style="{{ sub }}">Review content reported as inappropriate or misleading</p>
+                <p class="fs-4 fw-light">Review content reported as inappropriate or misleading</p>
 
-                <div class="row row-cols-1 row-cols-md-2 g-3" style="font-weight: 300; font-size: 1.3rem;">
-                    {% for r in reports %}
-                    <div class="col">
-                        <div class="card h-100 p-3">
-                            <h3 style="{{ card_title }}">Report on
-                                "<a class="text-reset" href="{{ url_for('main.campaign_donation', campaign_id=r.campaignID) }}">{{ r.campaignTitle }}</a>"
-                                <span class="badge {{ status_badges.get(r.campaignStatus, 'bg-secondary') }} align-middle" style="font-size: 0.8rem;">{{ r.campaignStatus }}</span>
-                            </h3>
-                            <div class="mb-1"><strong>{{ r.reason }}</strong></div>
-                            {% if r.details %}<div class="text-muted mb-2" style="font-size: 1.1rem;">{{ r.details }}</div>{% endif %}
-                            <div class="text-muted mb-3" style="font-size: 1rem;">Reported by {{ r.reporterName or 'a deleted account' }} on {{ r.reportedAt.strftime('%d %b %Y') }}</div>
-
-                            <div class="d-flex flex-wrap gap-2 mt-auto">
-                                {% for action, label, style in [('dismiss', 'Dismiss', 'btn-outline-secondary'), ('suspend', 'Suspend campaign', 'btn-outline-warning'), ('remove', 'Remove campaign', 'btn-outline-danger')] %}
-                                <form method="post" action="{{ url_for('main.admin_review_report', report_id=r.id, action=action) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button class="btn {{ style }} btn-sm">{{ label }}</button>
-                                </form>
-                                {% endfor %}
-                            </div>
-                        </div>
+                {% for r in reports %}
+                <div class="card p-3 mb-3 fs-5 fw-light">
+                    <h3 class="fs-3 fw-light">Report on "<a class="text-reset" href="{{ url_for('main.campaign_donation', campaign_id=r.campaignID) }}">{{ r.campaignTitle }}</a>"</h3>
+                    <p><strong>{{ r.reason }}</strong> &middot; {{ r.details or '' }}</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="post" action="{{ url_for('main.admin_review_report', report_id=r.id, action='dismiss') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-secondary btn-sm">Dismiss</button>
+                        </form>
+                        <form method="post" action="{{ url_for('main.admin_review_report', report_id=r.id, action='suspend') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-warning btn-sm">Suspend campaign</button>
+                        </form>
+                        <form method="post" action="{{ url_for('main.admin_review_report', report_id=r.id, action='remove') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-outline-danger btn-sm">Remove campaign</button>
+                        </form>
                     </div>
-                    {% else %}
-                    <p class="text-muted" style="font-size: 1.2rem;">No reports waiting for review.</p>
-                    {% endfor %}
                 </div>
-
-                {% if reviewed_reports %}
-                <h3 class="mt-4" style="font-weight: 300; font-size: 1.4rem;">Recently reviewed</h3>
-                <ul class="list-unstyled mb-0 text-muted" style="font-size: 1.1rem;">
-                    {% for r in reviewed_reports %}
-                    <li>{{ r.reason }} on "{{ r.campaignTitle }}" &middot; {{ r.status }}{% if r.reviewedAt %} {{ r.reviewedAt.strftime('%d %b %Y') }}{% endif %}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+                {% else %}
+                <p class="text-muted fs-5">No reports waiting for review.</p>
+                {% endfor %}
             </div>
 
 
-            <!-- Homepage featured section -->
-            <div id="featured" class="card p-3 p-md-5" style="border: 3px green solid">
+            <div id="featured" class="card border border-success border-3 p-4">
                 <h2 class="titleLook">Featured Campaigns</h2>
-                <p style="{{ sub }}">Showcase the very best on the home page for all to see. Only Active campaigns can be featured.</p>
+                <p class="fs-4 fw-light">Tick the campaigns to show on the home page. Only Active campaigns can be featured.</p>
 
                 <form method="post" action="{{ url_for('main.admin_set_featured') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-3" style="font-weight: 300; font-size: 1.3rem;">
-                        {% for c in featured_options %}
-                        <div class="col">
-                            <div class="card p-3 h-100">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="featured" value="{{ c.id }}" id="feat-{{ c.id }}" {% if c.isFeatured %}checked{% endif %}>
-                                    <label class="form-check-label" for="feat-{{ c.id }}" style="font-weight: 700; font-size: 1.2rem;">{{ c.title }}</label>
-                                    <div class="text-muted" style="font-size: 0.95rem;">{{ c.creatorName }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <p class="text-muted">No active campaigns to feature.</p>
-                        {% endfor %}
+                    {% for c in featured_options %}
+                    <div class="form-check fs-5 fw-light">
+                        <input class="form-check-input" type="checkbox" name="featured" value="{{ c.id }}" id="feat-{{ c.id }}" {% if c.isFeatured %}checked{% endif %}>
+                        <label class="form-check-label" for="feat-{{ c.id }}">{{ c.title }}</label>
                     </div>
-                    <button type="submit" class="btn btn-success">Save</button>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-success mt-3">Save</button>
                 </form>
             </div>
 

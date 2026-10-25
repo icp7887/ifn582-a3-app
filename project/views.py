@@ -148,7 +148,7 @@ def _render_creator_dashboard(campaign, campaign_form=None, post_form=None, stat
             'title': campaign['title'], 'description': campaign['description'], 'goal': campaign['goalAmount'],
             'category': campaign['category'], 'start_date': campaign['startDate'], 'end_date': campaign['endDate']})
     stats = models.get_campaign_stats(campaign['id'])
-    days_left = (campaign['endDate'] - date.today()).days
+    days_left = max((campaign['endDate'] - date.today()).days, 0)
     return render_template(
         'campaign.html',
         campaign=campaign,
@@ -387,13 +387,10 @@ CAMPAIGN_STATUSES = ['Pending', 'Active', 'Paused', 'Closed', 'Rejected', 'Suspe
 def admin_dashboard():
     return render_template(
         'admin_dashboard.html',
-        counts=models.get_dashboard_counts(),               
         pending=models.get_all_campaigns_with_creator(),    
         campaigns=models.get_all_campaigns_with_details(),  
-        statuses=CAMPAIGN_STATUSES,
         users=models.get_all_users(),                       
         reports=models.get_open_reports(),                  
-        reviewed_reports=models.get_reviewed_reports(),
         featured_options=models.get_active_campaigns(),     
     )
 

@@ -40,23 +40,28 @@
 
         </nav>
 
-        {% include '_flashes.html' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
         <div class="container-fluid px-4 py-4" style="max-width: 800px;">
-            <a href="{{ url_for('main.admin_dashboard', _anchor='users') }}" class="text-muted">&larr; Back to dashboard</a>
+            <a href="{{ url_for('main.admin_dashboard', _anchor='users') }}" class="text-muted">&larr; Back</a>
             <h1 class="fontLook mt-2">Edit Account</h1>
-            <p class="description">{{ user.username }} &middot; {{ 'Supporter' if user.role == 'Customer' else user.role }} &middot; joined {{ user.dateJoined.strftime('%d %b %Y') if user.dateJoined else 'unknown' }}</p>
+            <p class="description">{{ user.username }} &middot; {{ user.role }}</p>
 
-            <div style="border: 3px green solid;" class="card p-4">
+            <div class="card border border-success border-3 p-4">
                 <form method="post" novalidate>
                     {{ form.hidden_tag() }}
-                    {% for field in [form.username, form.email] %}
                     <div class="mb-3">
-                        {{ field.label(class="form-label", style="font-weight: 300; font-size: 1.3rem;") }}
-                        {{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}
-                        {% if field.errors %}<div class="invalid-feedback">{{ field.errors[0] }}</div>{% endif %}
+                        {{ form.username.label(class="form-label", style="font-weight: 300; font-size: 1.3rem;") }}
+                        {{ form.username(class="form-control") }}
+                        {% for e in form.username.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
-                    {% endfor %}
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label", style="font-weight: 300; font-size: 1.3rem;") }}
+                        {{ form.email(class="form-control") }}
+                        {% for e in form.email.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                    </div>
 
                     {% if user.role == 'Creator' %}
                     <div class="form-check mb-3">
@@ -65,7 +70,6 @@
                     </div>
                     {% endif %}
 
-                    <p class="text-muted small">Passwords cannot be viewed or changed here. Use Suspend on the dashboard to block an account.</p>
                     {{ form.submit(class="btn btn-success") }}
                     <a href="{{ url_for('main.admin_dashboard', _anchor='users') }}" class="btn btn-link text-muted">Cancel</a>
                 </form>

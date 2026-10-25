@@ -55,11 +55,25 @@
                     </form>
                 </div>
             </div>
-           {% include '_auth_nav.html' %}
+           <div class="d-flex gap-2">
+               {% if g.user %}
+                   {% if g.user.role == 'Creator' %}<a class="btn btn-outline-light btn-sm" href="{{ url_for('main.campaign') }}">Dashboard</a>{% endif %}
+                   {% if g.user.role == 'Admin' %}<a class="btn btn-outline-light btn-sm" href="{{ url_for('main.admin_dashboard') }}">Admin</a>{% endif %}
+                   <form method="post" action="{{ url_for('main.logout') }}">
+                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                       <button class="btn btn-light btn-sm">Logout</button>
+                   </form>
+               {% else %}
+                   <a class="btn btn-outline-light btn-sm" href="{{ url_for('main.login') }}">Login</a>
+                   <a class="btn btn-light btn-sm" href="{{ url_for('main.register') }}">Register</a>
+               {% endif %}
+           </div>
         </div>
     </nav>
 
-    {% include '_flashes.html' %}
+    {% for category, msg in get_flashed_messages(with_categories=true) %}
+    <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+    {% endfor %}
 
 
     <header class="front">
@@ -111,7 +125,6 @@
     <br><br>
 
 
-    <!-- Existing featured section -->
     <div style="background-color: #111111;">
 
         <div class="container-fluid pt-0 pb-5 text-center">
@@ -121,7 +134,7 @@
             <h1 id="featured" class="mx-auto container-fluid boldLook">
                 Today's Top Featured
             </h1>
-            <!-- Featured campaigns are chosen on the admin dashboard -->
+
             <br><br>
 
             <div class="row row-cols-1 row-cols-md-3 row-cols-lg-3 g-4">
@@ -198,13 +211,11 @@
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for campaign in campaigns %}
-            {% set pct = ((campaign.raised / campaign.goalAmount) * 100) if campaign.goalAmount else 0 %}
-            {% set img = campaign.campaignImage or '' %}
             <div class="col">
                 <a href="{{ url_for('main.campaign_donation', campaign_id=campaign.id) }}" class="card campaign-card h-100 text-decoration-none">
                     <div class="campaign-img-wrap">
                         <img class="campaign-img" loading="lazy" alt="{{ campaign.title }}"
-                            src="{{ img if img.startswith('http') else url_for('static', filename=img) }}">
+                            src="{{ campaign.campaignImage if (campaign.campaignImage or '').startswith('http') else url_for('static', filename=campaign.campaignImage or '') }}">
                         <span class="badge campaign-cat">{{ campaign.category }}</span>
                         {% if campaign.isFeatured %}
                         <span class="badge bg-warning text-dark campaign-featured">Featured</span>
@@ -220,7 +231,7 @@
                             <div class="d-flex justify-content-between">
                                 <span><strong>${{ '{:,.0f}'.format(campaign.raised) }}</strong>
                                     <span class="text-white-50">raised of ${{ '{:,.0f}'.format(campaign.goalAmount) }}</span></span>
-                                <span class="text-white-50">{{ pct|round|int }}%</span>
+                                <span class="text-white-50">{{ (campaign.raised / campaign.goalAmount * 100)|round|int }}%</span>
                             </div>
                         </div>
                     </div>

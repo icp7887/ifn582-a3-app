@@ -14,7 +14,7 @@
 <body class="min-vh-100 d-flex flex-column justify-content-center py-5">
     
     <div class="container" style="max-width: 520px;">
-        <!-- Header Logo -->
+
         <div class="text-center mb-4">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                     <img
@@ -24,50 +24,52 @@
             <p class="text-secondary">Join Superchat as a supporter or creator</p>
         </div>
 
-        {% include '_flashes.html' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
-        <!-- Form Card -->
+
         <div class="card card-dark shadow-lg rounded-4 p-4 p-md-5 mb-4">
             <form method="post" novalidate>
                 {{ form.hidden_tag() }}
 
                 <div class="form-floating mb-3">
-                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="Username") }}
+                    {{ form.username(class="form-control", placeholder="Username") }}
                     {{ form.username.label }}
                     {% for e in form.username.errors %}
-                        <div class="invalid-feedback">{{ e }}</div>
+                        <div class="text-danger">{{ e }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-floating mb-3">
-                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="Email address") }}
+                    {{ form.email(class="form-control", placeholder="Email address") }}
                     {{ form.email.label }}
                     {% for e in form.email.errors %}
-                        <div class="invalid-feedback">{{ e }}</div>
+                        <div class="text-danger">{{ e }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-floating mb-3">
-                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Password") }}
+                    {{ form.password(class="form-control", placeholder="Password") }}
                     {{ form.password.label }}
                     {% for e in form.password.errors %}
-                        <div class="invalid-feedback">{{ e }}</div>
+                        <div class="text-danger">{{ e }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-floating mb-3">
-                    {{ form.confirm(class="form-control" + (" is-invalid" if form.confirm.errors else ""), placeholder="Confirm Password") }}
+                    {{ form.confirm(class="form-control", placeholder="Confirm Password") }}
                     {{ form.confirm.label }}
                     {% for e in form.confirm.errors %}
-                        <div class="invalid-feedback">{{ e }}</div>
+                        <div class="text-danger">{{ e }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-floating mb-4">
-                    {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+                    {{ form.role(class="form-select") }}
                     {{ form.role.label }}
                     {% for e in form.role.errors %}
-                        <div class="invalid-feedback">{{ e }}</div>
+                        <div class="text-danger">{{ e }}</div>
                     {% endfor %}
                 </div>
 
@@ -75,7 +77,7 @@
             </form>
         </div>
 
-        <!-- Footer link -->
+
         <p class="text-center text-secondary mb-0">
             Already registered? <a href="{{ url_for('main.login') }}" class="text-decoration-none fw-bold text-warning">Log in</a>
         </p>

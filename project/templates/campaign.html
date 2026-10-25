@@ -1,6 +1,4 @@
-{% set label = 'font-weight: 300; font-size: 1.5rem;' %}
-{% set cell = 'font-weight: 300; font-size: 1.3rem;' %}
-{% set pct = ((stats.raised / campaign.goalAmount) * 100) if campaign.goalAmount else 0 %}
+{% set pct = (stats.raised / campaign.goalAmount * 100)|round|int %}
 <!DOCTYPE html>
 <html>
     <title> SuperChats | Campaign </title>
@@ -45,7 +43,9 @@
         </div>
         </nav>
 
-        {% include '_flashes.html' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
     
 
@@ -67,47 +67,50 @@
                 <a href="{{ url_for('main.new_campaign') }}" class="btn btn-success">+ New Campaign</a>
             </div>
 
-            <div style="border: 3px green solid;" class="card p-4 mb-4">
+            <div class="card border border-success border-3 p-4 mb-4">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                     <h2 class="titleLook mb-0" style="font-size: 3rem;">{{ campaign.title }}</h2>
                 </div>
 
                 {% if campaign.status == 'Pending' %}
-                <div class="alert alert-warning">Waiting for an administrator to approve this campaign. It is not public yet.</div>
+                <div class="alert alert-warning">Approval by admin required.</div>
                 {% elif campaign.status == 'Rejected' %}
-                <div class="alert alert-danger">An administrator rejected this campaign, so it is not public.</div>
+                <div class="alert alert-danger">Admin rejected this campaign.</div>
                 {% elif campaign.status == 'Suspended' %}
-                <div class="alert alert-secondary">An administrator suspended this campaign. It is hidden and cannot be edited.</div>
+                <div class="alert alert-secondary">Admin suspended this campaign.</div>
                 {% endif %}
 
                 <div class="d-flex flex-wrap justify-content-between text-muted mb-2 gap-2">
                     <span style="font-weight: 300; font-size: 1.2rem;"><strong class="text-success">${{ '{:,.2f}'.format(stats.raised) }}</strong> raised of ${{ '{:,.2f}'.format(campaign.goalAmount) }} goal</span>
-                    <span style="font-weight: 300; font-size: 1.2rem;">{{ pct|round|int }}%</span>
+                    <span style="font-weight: 300; font-size: 1.2rem;">{{ pct }}%</span>
                 </div>
                 <div class="progress mb-3" style="height: 2rem;">
-                    <div class="progress-bar bg-success" style="width: {{ [pct, 100]|min|round(1) }}%;"></div>
+                    <div class="progress-bar bg-success" style="width: {{ pct }}%;"></div>
                 </div>
 
                 <h3 style="font-weight: 300; font-size: 2rem;">Donation History</h3>
                 {% if donations %}
                 <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-                    <table class="table table-sm align-middle">
+                    <table class="table table-sm align-middle fs-5 fw-light">
                         <thead>
                             <tr>
-                                {% for h in ['Donor', 'Amount', 'Tier', 'Method', 'Message', 'Date'] %}
-                                <th style="font-weight: 300; font-size: 1.4rem;">{{ h }}</th>
-                                {% endfor %}
+                                <th style="font-weight: 300; font-size: 1.4rem;">Donor</th>
+                                <th style="font-weight: 300; font-size: 1.4rem;">Amount</th>
+                                <th style="font-weight: 300; font-size: 1.4rem;">Tier</th>
+                                <th style="font-weight: 300; font-size: 1.4rem;">Method</th>
+                                <th style="font-weight: 300; font-size: 1.4rem;">Message</th>
+                                <th style="font-weight: 300; font-size: 1.4rem;">Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for d in donations %}
                             <tr>
-                                <td style="{{ cell }}">{{ d.donorName }}</td>
-                                <td style="{{ cell }}">${{ '{:,.2f}'.format(d.amount) }}</td>
-                                <td style="{{ cell }}">{{ d.tierName or 'One-off' }}</td>
-                                <td style="{{ cell }}">{{ d.paymentNetwork }}</td>
-                                <td style="font-weight: 300; font-size: 1.1rem;">{{ d.message or '' }}</td>
-                                <td style="{{ cell }}" class="text-nowrap">{{ d.transactionDate.strftime('%d %b %Y') }}</td>
+                                <td>{{ d.donorName }}</td>
+                                <td>${{ d.amount }}</td>
+                                <td>{{ d.tierName or 'One-off' }}</td>
+                                <td>{{ d.paymentNetwork }}</td>
+                                <td>{{ d.message or '' }}</td>
+                                <td>{{ d.transactionDate.strftime('%d %b %Y') }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -118,79 +121,94 @@
                 {% endif %}
             </div>
 
-            <div style="border: 3px green solid;" class="card p-3 p-md-4 mb-4">
+            <div class="card border border-success border-3 p-3 p-md-4 mb-4">
                 <h2 class="titleLook">Campaign Statistics</h2>
 
                 <div class="row row-cols-1 row-cols-sm-3 g-3 mt-2">
-                    {% for value, name in [('$' ~ '{:,.0f}'.format(stats.raised), 'Total Raised'),
-                                           (stats.supporters, 'Donors'),
-                                           (days_left if days_left >= 0 else 'Ended', 'Days Remaining')] %}
                     <div class="col">
                         <div class="card text-center p-3 h-100">
-                            <p class="number">{{ value }}</p>
-                            <p class="text-muted" style="font-weight: 300; font-size: 1.3rem;">{{ name }}</p>
+                            <p class="number">${{ '{:,.0f}'.format(stats.raised) }}</p>
+                            <p class="text-muted" style="font-weight: 300; font-size: 1.3rem;">Total Raised</p>
                         </div>
                     </div>
-                    {% endfor %}
+                    <div class="col">
+                        <div class="card text-center p-3 h-100">
+                            <p class="number">{{ stats.supporters }}</p>
+                            <p class="text-muted" style="font-weight: 300; font-size: 1.3rem;">Donors</p>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card text-center p-3 h-100">
+                            <p class="number">{{ days_left }}</p>
+                            <p class="text-muted" style="font-weight: 300; font-size: 1.3rem;">Days Remaining</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
 
-            <div id="status" style="border: 3px green solid;" class="card p-4 mb-4">
+            <div id="status" class="card border border-success border-3 p-4 mb-4">
                 <h2 class="titleLook">Campaign Status</h2>
                 {% if campaign.status in creator_statuses %}
-                <p style="{{ label }}">Pause donations for a while, or close the campaign when it's finished</p>
+                <p class="fs-4 fw-light">Current status: <strong>{{ campaign.status }}</strong></p>
                 <form method="post" action="{{ url_for('main.creator_set_status', campaign_id=campaign.id) }}" class="d-flex flex-wrap gap-2 align-items-center">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <label class="visually-hidden" for="status-select">Status</label>
-                    <select id="status-select" name="status" class="form-select w-auto">
-                        {% for st in creator_statuses %}<option {% if st == campaign.status %}selected{% endif %}>{{ st }}</option>{% endfor %}
+                    <select name="status" class="form-select w-auto">
+                        <option>Active</option>
+                        <option>Paused</option>
+                        <option>Closed</option>
                     </select>
                     <button type="submit" class="btn btn-success">Update Status</button>
                 </form>
                 {% else %}
-                <p class="text-muted mb-0" style="font-size: 1.2rem;">This campaign is <strong>{{ campaign.status }}</strong>. That is an administrator decision, so the status can't be changed here.</p>
+                <p class="text-muted mb-0" style="font-size: 1.2rem;">This campaign is <strong>{{ campaign.status }}</strong> Admin required</p>
                 {% endif %}
             </div>
 
 
-            <div id="settings" style="border: 3px green solid;" class="card p-4 mb-4">
+            <div id="settings" class="card border border-success border-3 p-4 mb-4">
                 <h2 class="titleLook">Campaign Settings</h2>
                 <br>
                 {% if campaign.status == 'Suspended' %}
                 <p class="text-muted mb-0" style="font-size: 1.2rem;">Suspended campaigns can't be edited.</p>
                 {% else %}
-                {% set f = campaign_form %}
                 <form method="post" action="{{ url_for('main.edit_campaign', campaign_id=campaign.id) }}#settings" enctype="multipart/form-data" novalidate>
-                    {{ f.hidden_tag() }}
+                    {{ campaign_form.hidden_tag() }}
                     <div class="mb-3">
-                        {{ f.title.label(class="form-label", style=label) }}
-                        {{ f.title(class="form-control" + (" is-invalid" if f.title.errors else "")) }}
-                        {% if f.title.errors %}<div class="invalid-feedback">{{ f.title.errors[0] }}</div>{% endif %}
+                        {{ campaign_form.title.label(class="form-label fs-4 fw-light") }}
+                        {{ campaign_form.title(class="form-control") }}
+                        {% for e in campaign_form.title.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="mb-3">
-                        {{ f.description.label(class="form-label", style=label) }}
-                        {{ f.description(class="form-control" + (" is-invalid" if f.description.errors else ""), rows=3) }}
-                        {% if f.description.errors %}<div class="invalid-feedback">{{ f.description.errors[0] }}</div>{% endif %}
+                        {{ campaign_form.description.label(class="form-label fs-4 fw-light") }}
+                        {{ campaign_form.description(class="form-control", rows=3) }}
+                        {% for e in campaign_form.description.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="row g-3">
-                        {% for field, kind in [(f.goal, 'text'), (f.category, 'select'), (f.start_date, 'date'), (f.end_date, 'date')] %}
                         <div class="col-md-6">
-                            {{ field.label(class="form-label", style=label) }}
-                            {% if kind == 'select' %}
-                            {{ field(class="form-select" + (" is-invalid" if field.errors else "")) }}
-                            {% elif kind == 'date' %}
-                            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), type="date") }}
-                            {% else %}
-                            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), inputmode="decimal") }}
-                            {% endif %}
-                            {% if field.errors %}<div class="invalid-feedback">{{ field.errors[0] }}</div>{% endif %}
+                            {{ campaign_form.goal.label(class="form-label fs-4 fw-light") }}
+                            {{ campaign_form.goal(class="form-control") }}
+                            {% for e in campaign_form.goal.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                         </div>
-                        {% endfor %}
                         <div class="col-md-6">
-                            {{ f.image_file.label(class="form-label", style=label) }}
-                            {{ f.image_file(class="form-control" + (" is-invalid" if f.image_file.errors else ""), accept="image/*") }}
-                            {% if f.image_file.errors %}<div class="invalid-feedback">{{ f.image_file.errors[0] }}</div>{% endif %}
+                            {{ campaign_form.category.label(class="form-label fs-4 fw-light") }}
+                            {{ campaign_form.category(class="form-select") }}
+                            {% for e in campaign_form.category.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ campaign_form.start_date.label(class="form-label fs-4 fw-light") }}
+                            {{ campaign_form.start_date(class="form-control") }}
+                            {% for e in campaign_form.start_date.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ campaign_form.end_date.label(class="form-label fs-4 fw-light") }}
+                            {{ campaign_form.end_date(class="form-control") }}
+                            {% for e in campaign_form.end_date.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ campaign_form.image_file.label(class="form-label fs-4 fw-light") }}
+                            {{ campaign_form.image_file(class="form-control") }}
+                            {% for e in campaign_form.image_file.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success mt-4">Save</button>
@@ -198,26 +216,25 @@
                 {% endif %}
             </div>
 
-            <div id="updates" style="border: 3px green solid;" class="card p-4">
+            <div id="updates" class="card border border-success border-3 p-4">
                 <h2 class="titleLook">Campaign Updates</h2>
                 <br>
-                {% set p = post_form %}
                 <form method="post" action="{{ url_for('main.add_post', campaign_id=campaign.id) }}#updates" enctype="multipart/form-data" class="border-bottom pb-4 mb-4" novalidate>
-                    {{ p.hidden_tag() }}
+                    {{ post_form.hidden_tag() }}
                     <div class="mb-3">
-                        {{ p.title.label(class="form-label", style=label) }}
-                        {{ p.title(class="form-control" + (" is-invalid" if p.title.errors else "")) }}
-                        {% if p.title.errors %}<div class="invalid-feedback">{{ p.title.errors[0] }}</div>{% endif %}
+                        {{ post_form.title.label(class="form-label fs-4 fw-light") }}
+                        {{ post_form.title(class="form-control") }}
+                        {% for e in post_form.title.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="mb-3">
-                        {{ p.image.label(class="form-label", style=label) }}
-                        {{ p.image(class="form-control" + (" is-invalid" if p.image.errors else ""), accept="image/*") }}
-                        {% if p.image.errors %}<div class="invalid-feedback">{{ p.image.errors[0] }}</div>{% endif %}
+                        {{ post_form.image.label(class="form-label fs-4 fw-light") }}
+                        {{ post_form.image(class="form-control") }}
+                        {% for e in post_form.image.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="mb-3">
-                        {{ p.content.label(class="form-label", style=label) }}
-                        {{ p.content(class="form-control" + (" is-invalid" if p.content.errors else ""), rows=3) }}
-                        {% if p.content.errors %}<div class="invalid-feedback">{{ p.content.errors[0] }}</div>{% endif %}
+                        {{ post_form.content.label(class="form-label fs-4 fw-light") }}
+                        {{ post_form.content(class="form-control", rows=3) }}
+                        {% for e in post_form.content.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <button type="submit" class="btn btn-success">Update</button>
                 </form>
@@ -243,7 +260,7 @@
                     </div>
                 </div>
                 {% else %}
-                <p class="text-muted" style="font-size: 1.2rem;">No updates yet. Post one to keep your supporters in the loop.</p>
+                <p class="text-muted" style="font-size: 1.2rem;">No updates yet.</p>
                 {% endfor %}
             </div>
 

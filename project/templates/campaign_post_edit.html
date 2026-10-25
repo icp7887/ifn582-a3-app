@@ -42,10 +42,10 @@
         </div>
         </nav>
 
-        {% include '_flashes.html' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
-        {% set label = 'font-weight: 300; font-size: 1.5rem;' %}
-        {% set p = form %}
 
         <div class="container-fluid px-4 py-4" style="max-width: 900px;">
 
@@ -53,32 +53,32 @@
             <h1 class="fontLook mt-2">Edit Update</h1>
             <p class="description">Posted {{ post.postDate.strftime('%d %b %Y') }} on {{ campaign.title }}</p>
 
-            <div style="border: 3px green solid;" class="card p-4">
+            <div class="card border border-success border-3 p-4">
                 <form method="post" enctype="multipart/form-data" novalidate>
-                    {{ p.hidden_tag() }}
+                    {{ form.hidden_tag() }}
                     <div class="mb-3">
-                        {{ p.title.label(class="form-label", style=label) }}
-                        {{ p.title(class="form-control" + (" is-invalid" if p.title.errors else "")) }}
-                        {% if p.title.errors %}<div class="invalid-feedback">{{ p.title.errors[0] }}</div>{% endif %}
+                        {{ form.title.label(class="form-label fs-4 fw-light") }}
+                        {{ form.title(class="form-control") }}
+                        {% for e in form.title.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <div class="mb-3">
-                        {{ p.content.label(class="form-label", style=label) }}
-                        {{ p.content(class="form-control" + (" is-invalid" if p.content.errors else ""), rows=5) }}
-                        {% if p.content.errors %}<div class="invalid-feedback">{{ p.content.errors[0] }}</div>{% endif %}
+                        {{ form.content.label(class="form-label fs-4 fw-light") }}
+                        {{ form.content(class="form-control", rows=5) }}
+                        {% for e in form.content.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     {% if post.postImage %}
                     <div class="mb-3">
                         <img src="{{ post.postImage if post.postImage.startswith('http') else url_for('static', filename=post.postImage) }}" alt="{{ post.title }}" style="max-width: 260px; max-height: 160px; object-fit: cover; border-radius: 0.5rem;">
                         <div class="form-check mt-2">
-                            {{ p.remove_image(class="form-check-input") }}
-                            {{ p.remove_image.label(class="form-check-label") }}
+                            {{ form.remove_image(class="form-check-input") }}
+                            {{ form.remove_image.label(class="form-check-label") }}
                         </div>
                     </div>
                     {% endif %}
                     <div class="mb-3">
-                        {{ p.image.label(class="form-label", style=label) }}
-                        {{ p.image(class="form-control" + (" is-invalid" if p.image.errors else ""), accept="image/*") }}
-                        {% if p.image.errors %}<div class="invalid-feedback">{{ p.image.errors[0] }}</div>{% endif %}
+                        {{ form.image.label(class="form-label fs-4 fw-light") }}
+                        {{ form.image(class="form-control") }}
+                        {% for e in form.image.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
                     </div>
                     <button type="submit" class="btn btn-success">Save Update</button>
                     <a href="{{ url_for('main.manage_campaign', campaign_id=campaign.id, _anchor='updates') }}" class="btn btn-link text-muted">Cancel</a>

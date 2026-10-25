@@ -51,30 +51,41 @@
                     </form>
                 </div>
             </div>
-           {% include '_auth_nav.html' %}
+           <div class="d-flex gap-2">
+               {% if g.user %}
+                   {% if g.user.role == 'Creator' %}<a class="btn btn-outline-light btn-sm" href="{{ url_for('main.campaign') }}">Dashboard</a>{% endif %}
+                   {% if g.user.role == 'Admin' %}<a class="btn btn-outline-light btn-sm" href="{{ url_for('main.admin_dashboard') }}">Admin</a>{% endif %}
+                   <form method="post" action="{{ url_for('main.logout') }}">
+                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                       <button class="btn btn-light btn-sm">Logout</button>
+                   </form>
+               {% else %}
+                   <a class="btn btn-outline-light btn-sm" href="{{ url_for('main.login') }}">Login</a>
+                   <a class="btn btn-light btn-sm" href="{{ url_for('main.register') }}">Register</a>
+               {% endif %}
+           </div>
         </div>
     </nav>
 
 
-        {% include '_flashes.html' %}
+        {% for category, msg in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category }} m-3">{{ msg }}</div>
+        {% endfor %}
 
-        {% set pct = ((campaign.raised / campaign.goalAmount) * 100) if campaign.goalAmount else 0 %}
-        {% set img = campaign.campaignImage or '' %}
+        {% set pct = (campaign.raised / campaign.goalAmount * 100)|round|int %}
         {% set input_style = 'background-color: #000; border: 1px solid #333; color: #fff;' %}
-        {% set error_style = 'background-color: #000; border: 1px solid #dc3545; color: #fff;' %}
         {% set label_style = 'font-size: 0.85rem;' %}
-        {% set tier_badges = {'Superfan': 'bg-warning text-dark', 'Member': 'bg-light text-dark', 'Stan': 'bg-secondary'} %}
 
         <header class="front">
 
-            <img class="frontImg" alt="{{ campaign.title }}" src="{{ img if img.startswith('http') else url_for('static', filename=img) }}">
+            <img class="frontImg" alt="{{ campaign.title }}" src="{{ campaign.campaignImage if (campaign.campaignImage or '').startswith('http') else url_for('static', filename=campaign.campaignImage or '') }}">
             <div class="frontOverlay">
 
 
                 <div class="frontContent">
                     <span class="badge bg-warning mb-2">Creator</span>
                     {% if campaign.creatorVerified %}<span class="badge bg-success mb-2">Verified</span>{% endif %}
-                    {% if campaign.status in ('Paused', 'Closed') %}<span class="badge bg-secondary mb-2">{{ campaign.status }}</span>{% elif campaign.status != 'Active' %}<span class="badge bg-secondary mb-2">{{ campaign.status }} &middot; preview</span>{% endif %}
+                    {% if campaign.status != 'Active' %}<span class="badge bg-secondary mb-2">{{ campaign.status }}</span>{% endif %}
 
                     <h2 class = "fontLook">{{ campaign.creatorName }}</h2>
 
@@ -94,7 +105,7 @@
 
                    <div class="progress" style="height: 2rem; background-color: #1c1c1c; border: 1px solid #333;">
 
-                    <div class="progress-bar bg-warning" style="width: {{ [pct, 100]|min|round(1) }}%;">{{ pct|round|int }}%</div>
+                    <div class="progress-bar bg-warning" style="width: {{ pct }}%;">{{ pct }}%</div>
 
 
                 </div><br>
@@ -141,20 +152,18 @@
         <div class="row row-cols-1 row-cols-md-3 g-4 justify-content-center">
 
             {% for t in tiers %}
-            {% set middle = loop.index == 2 %}
             <div class="col">
-                <div class="card creator-card h-100 {% if middle %}border-warning{% endif %}">
+                <div class="card creator-card h-100">
 
-                    <div class="card-body d-flex flex-column {% if middle %}pt-4{% endif %}">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ t.tierName }}</h5>
 
                             <div class="mb-2"><span class="h3 mb-0">${{ '{:,.0f}'.format(t.price) }}</span> <span class="text-white-50">/month</span></div>
 
                         <ul class="list-unstyled mb-4">
                             <li class="mb-2">✓ {{ t.description }} </li>
-                            {% if not loop.first %}<li class="mb-2">✓ {{ tiers[loop.index0 - 1].tierName }} perks included </li>{% endif %}
                         </ul>
-                            <a class="btn {{ 'btn-outline-warning' if middle else 'btn-outline-light' }} mt-auto"
+                            <a class="btn btn-outline-light mt-auto"
                                 href="{{ url_for('main.campaign_donation', campaign_id=campaign.id, tier=t.id, _anchor='donate') }}">Subscribe</a>
                     </div>
                 </div>
@@ -175,7 +184,7 @@
     <h5 class = "boxLook">Posts Updates</h5>
         <br>
         {% for p in posts %}
-        <div class="{% if not loop.last %}pb-3 mb-3{% endif %}" {% if not loop.last %}style="border-bottom: 1px solid #222;"{% endif %}>
+        <div class="pb-3 mb-3">
             <div class="d-flex justify-content-between align-items-baseline mb-1">
 
                 <div class="text-white" style="font-weight: 300; font-size: 1.5rem;">{{ p.title }}</div>
@@ -209,12 +218,11 @@
 
                     <tbody style="font-size: 1.2rem; font-weight: 400;">
                         {% for d in donations %}
-                        {% set last = 'border: none;' if loop.last else '' %}
                         <tr>
-                            <td style="{{ last }}">{{ d.donorName }}</td>
-                            <td style="{{ last }}">${{ '{:,.2f}'.format(d.amount) }}{% if d.tierName %}/month{% endif %}</td>
-                            <td style="{{ last }}">{% if d.tierName %}<span class="badge {{ tier_badges.get(d.tierName, 'bg-secondary') }}">{{ d.tierName }}</span>{% else %}<span style="color: #aaa;">One-off</span>{% endif %}</td>
-                            <td style="padding: 26px; {{ last }}">{{ d.message or '' }}</td>
+                            <td>{{ d.donorName }}</td>
+                            <td>${{ '{:,.2f}'.format(d.amount) }}</td>
+                            <td>{{ d.tierName or 'One-off' }}</td>
+                            <td style="padding: 26px;">{{ d.message or '' }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -258,37 +266,47 @@
     {{ form.hidden_tag() }}
     <div class="row g-3">
 
-        {% for field, placeholder in [(form.donor_name, 'Your name'), (form.address, 'Your billing address'),
-                                            (form.email, 'you@gmail.com')] %}
         <div class="col-md-6">
-            {{ field.label(class="form-label text-secondary mb-1", style=label_style) }}
-            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), placeholder=placeholder, style=(error_style if field.errors else input_style)) }}
-            {% if field.errors %}<div class="invalid-feedback">{{ field.errors[0] }}</div>{% endif %}
+            {{ form.donor_name.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.donor_name(class="form-control", placeholder="Your name", style=input_style) }}
+            {% for e in form.donor_name.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
         </div>
-        {% endfor %}
+
+        <div class="col-md-6">
+            {{ form.address.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.address(class="form-control", placeholder="Your billing address", style=input_style) }}
+            {% for e in form.address.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="col-md-6">
+            {{ form.email.label(class="form-label text-secondary mb-1", style=label_style) }}
+            {{ form.email(class="form-control", placeholder="you@gmail.com", style=input_style) }}
+            {% for e in form.email.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+        </div>
+
 
         <div class="col-md-6">
             {{ form.tier.label(class="form-label text-secondary mb-1", style=label_style) }}
-            {{ form.tier(class="form-select" + (" is-invalid" if form.tier.errors else ""), style=(error_style if form.tier.errors else input_style)) }}
-            {% if form.tier.errors %}<div class="invalid-feedback">{{ form.tier.errors[0] }}</div>{% endif %}
+            {{ form.tier(class="form-select", style=input_style) }}
+            {% for e in form.tier.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
         </div>
 
         <div class="col-md-6">
             {{ form.amount.label(class="form-label text-secondary mb-1", style=label_style) }}
-            {{ form.amount(class="form-control" + (" is-invalid" if form.amount.errors else ""), placeholder="25.00", inputmode="decimal", style=(error_style if form.amount.errors else input_style)) }}
-            {% if form.amount.errors %}<div class="invalid-feedback">{{ form.amount.errors[0] }}</div>{% endif %}
+            {{ form.amount(class="form-control", placeholder="25.00", style=input_style) }}
+            {% for e in form.amount.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
         </div>
 
         <div class="col-md-6">
             {{ form.payment_method.label(class="form-label text-secondary mb-1", style=label_style) }}
-            {{ form.payment_method(class="form-select" + (" is-invalid" if form.payment_method.errors else ""), style=(error_style if form.payment_method.errors else input_style)) }}
-            {% if form.payment_method.errors %}<div class="invalid-feedback">{{ form.payment_method.errors[0] }}</div>{% endif %}
+            {{ form.payment_method(class="form-select", style=input_style) }}
+            {% for e in form.payment_method.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
         </div>
 
         <div class="col-12">
             {{ form.message.label(class="form-label text-secondary mb-1", style=label_style) }}
-            {{ form.message(class="form-control" + (" is-invalid" if form.message.errors else ""), rows=2, maxlength=500, placeholder="Leave a message of support", style=(error_style if form.message.errors else input_style)) }}
-            {% if form.message.errors %}<div class="invalid-feedback">{{ form.message.errors[0] }}</div>{% endif %}
+            {{ form.message(class="form-control", rows=2, maxlength=500, placeholder="Leave a message of support", style=input_style) }}
+            {% for e in form.message.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
         </div>
     </div>
 
