@@ -83,11 +83,6 @@
                         </div>
                         {% endfor %}
                         <div class="col-md-6">
-                            {{ f.image_url.label(class="form-label", style=label) }}
-                            {{ f.image_url(class="form-control" + (" is-invalid" if f.image_url.errors else ""), placeholder="https://...") }}
-                            {% if f.image_url.errors %}<div class="invalid-feedback">{{ f.image_url.errors[0] }}</div>{% endif %}
-                        </div>
-                        <div class="col-md-6">
                             {{ f.image_file.label(class="form-label", style=label) }}
                             {{ f.image_file(class="form-control" + (" is-invalid" if f.image_file.errors else ""), accept="image/*") }}
                             {% if f.image_file.errors %}<div class="invalid-feedback">{{ f.image_file.errors[0] }}</div>{% endif %}

@@ -13,13 +13,6 @@
 
     }
 
-    .whiteTheme {
-
-        background-color: #FAFAFA;
-        color: #FAFAFA;
-
-    }
-
     .number {
 
         font-size: 3rem;
@@ -90,6 +83,7 @@ body {
         border: 1px solid #333;
         border-radius: 26rem;
         background-color: #1c1c1c;
+        color: #fff;
         
 
     }
@@ -140,54 +134,6 @@ body {
         margin-bottom: 1.5rem;
     }
 
-    .nav-links {
-        gap: 2rem;
-    }
-
-
-    .nav-links .nav-link {
-        color: #fff !important;
-        font-size: 0.9rem;
-
-        padding: 0.25rem 0 !important;
-        font-weight: 600;
-        
-      
-
-    }
-
-    .nav-links .nav-link:hover {
-        opacity: 0.6;
-    }
-
-        .nav-links .nav-link::after {
-
-            position: absolute;
-            left: 0;
-            bottom: -4px;
-            width: 0;
-            height: 2px;
-        background: #fff;
-
-    }
-
-    .nav-links .nav-link:hover::after {
-        width: 100%;
-    }
-
-    @media (max-width: 991px) {
-        .nav-links {
-            flex-direction: column;
-            margin: 0 0 1.5rem 0 !important;
-            gap: 1rem;
-        }
-
-        .nav-links .nav-link {
-            padding: 0.5rem 0 !important;
-            border-bottom: 1px solid #333;
-        }
-    }
-
     @media (min-width: 992px) {
         .inline {
             width: 86%;
@@ -215,7 +161,6 @@ body {
         padding: 3rem 0 1.5rem;
         }
     }
-
 
 
     .front {
@@ -277,6 +222,7 @@ body {
         height: 100%;
         background-color: #1e1e1e;
         border: 1px solid #333;
+        color: #fff;
         
         overflow: hidden;
 
@@ -319,7 +265,6 @@ body {
         background-color: #1d1d1d;
 
     }
-
 
 
     .footer {
@@ -443,19 +388,9 @@ body {
 }
 
 
-
-.searchBar,
 .searchBar:focus {
     color: #fff;
     background-color: #1c1c1c;
-}
-
-.searchBar::placeholder {
-    color: #aaa;
-}
-
-.creator-card {
-    color: #fff;
 }
 
 body:not(.dashboard-page) .text-muted {

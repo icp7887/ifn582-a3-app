@@ -33,9 +33,7 @@ class CampaignForm(FlaskForm):
     category = SelectField('Category', choices=[(c, c) for c in CATEGORIES])
     start_date = DateField('Start Date', validators=[InputRequired()])
     end_date = DateField('End Date', validators=[InputRequired()])
-    image_url = StringField('Image URL (optional)', validators=[Optional(), Length(max=255),
-                                                               Regexp(r'^https?://\S+$', message='Enter a full link starting with http:// or https://')])
-    image_file = FileField('Or upload an image', validators=[FileAllowed(IMAGE_TYPES, 'Images only')])
+    image_file = FileField('Upload an image', validators=[FileAllowed(IMAGE_TYPES, 'Images only')])
     submit = SubmitField('Save')
 
     def validate_end_date(self, field):
@@ -46,7 +44,7 @@ class CampaignForm(FlaskForm):
 class PostForm(FlaskForm):
     title = StringField('Update Title', validators=[InputRequired(), Length(min=3, max=150)])
     content = TextAreaField('Update Content', validators=[InputRequired(), Length(max=5000)])
-    image = FileField('Upload Image (optional)', validators=[FileAllowed(IMAGE_TYPES, 'Images only')])
+    image = FileField('Upload Image', validators=[FileAllowed(IMAGE_TYPES, 'Images only')])
     remove_image = BooleanField('Remove current image')
     submit = SubmitField('Post Update')
 

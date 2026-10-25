@@ -11,5 +11,4 @@ SETUP
 4. Set MYSQL_USER / MYSQL_PASSWORD in project/__init__.py
 5. mysql -u root -p < project/database.sql
 6. python run.py, then open http://127.0.0.1:5000
-7. Give us a 7, more than 86%, for our assessment 
 
